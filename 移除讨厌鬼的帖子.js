@@ -1,3 +1,26 @@
+// ==UserScript==
+// @name    remove the posts which make you sick
+// @author  burningall
+// @description 移除讨厌鬼的帖子
+// @version     2015.8.20
+// @include     *tieba.baidu.com/p/*
+// @include     *tieba.baidu.com/*
+// @include     *tieba.baidu.com/f?*
+// @grant       GM_addStyle
+// @grant       GM_getValue
+// @grant       GM_setValue
+// @grant       GM_listValues
+// @grant       GM_deleteValue
+// @grant       GM_registerMenuCommand
+// @run-at      document-start
+// @compatible  chrome  推荐
+// @compatible  firefox  性能稍微不足
+// @license     The MIT License (MIT); http://opensource.org/licenses/MIT
+// @supportURL      http://www.burningall.com
+// @contributionURL troy450409405@gmail.com|alipay.com
+// @namespace https://greasyfork.org/zh-CN/users/3400-axetroy
+// ==/UserScript==
+
 (function(window,document){
 //==============默认配置==============
 var defaultdConfig = {
@@ -18,13 +41,35 @@ function TQuery(tArg){
         case "undefined" :
             return this;
         case "function" :
-            addEvent(window,'load',tArg);
+            addEvent(this.doc,'DOMContentLoaded',function(){
+                tArg.call(this);
+            });
             break;
         case "string" :
-            var aElems = this.doc.querySelectorAll(tArg);
-            for(var i=0;i<aElems.length;i++){
-                this.elements.push(aElems[i]);
-            }
+                switch( tArg.charAt(0) ){
+                    case '<' :  //<div></div>，创建元素
+                        var oDiv = this.doc.createElement('div');//创建一个容器
+                        var oFragment = this.doc.createDocumentFragment();//创建文档碎片
+                        oDiv.innerHTML = tArg;
+                        var child = oDiv.childNodes;
+                        //储存在文档碎片中
+                        for( var t=0;t<child.length;t++ ){
+                            var clone = child[t].cloneNode(true);
+                            oFragment.appendChild(clone);
+                        }
+                        //输出到对象中
+                        var temp = [];
+                        for(var i=0;i<oFragment.childNodes.length;i++){
+                            temp.push(oFragment.childNodes[i]);
+                        }
+                        this.elements = temp;
+                        break;
+                    default:    //默认情况下是选择符
+                        var aElems = this.doc.querySelectorAll(tArg);
+                        for(var o=0;o<aElems.length;o++){
+                            this.elements.push(aElems[o]);
+                        }
+                }
             break;
         case "object" : //对象
             this.elements.push(tArg);
@@ -138,7 +183,7 @@ TQuery.prototype.css = function(attr,value){
                     if((type.test(k) || type2.test(k)) && attr[k].indexOf('%')<0 ){//如果是带像素的属性，并且没有%符号
                         attr[k] = parseFloat( attr[k] ).toFixed(2) + 'px';
                     }
-                    css += k+":"+attr[k]+";";
+                    css += k+":"+attr[k].toString()+";";
                 }
                 this.elements[i].style.cssText = css;
             }
@@ -255,6 +300,14 @@ TQuery.prototype.text = function(setting){
     //读取
     return this.elements[0].innerText || this.elements[0].textContent;
 };
+TQuery.prototype.insertBefore =function(obj){
+    var oFragment = this.doc.createDocumentFragment();//创建文档碎片
+    for(var i=0;i<this.length;i++){
+        oFragment.appendChild(this.elements[i]);
+    }
+    obj.parentNode.insertBefore(oFragment,obj);
+    return this;//返回对象，进行链式操作
+};
 TQuery.prototype.remove = function(){
     for(var i=0;i<this.length;i++){
         this.elements[i].remove();
@@ -358,28 +411,21 @@ function createList() {
 }
 
 function searchInList() {
-    var str = '',
-        userInfo = "",
+    var userInfo = "",
         userInfoStr = "",
         list = document.querySelectorAll('#showList tr'),
         listLength = list.length,
         inputValue = $('#sear').value();
     createList();
-    $("#showList").html(" ");
     for (var i = 0; i < listLength; i++) {
         userInfo = JSON.parse($(list[i]).attr('data-value'));
+        var $List = $('#showList tr');
         if (userInfo.name.indexOf(inputValue) >= 0 || userInfo.id.indexOf(inputValue) >= 0 || userInfo.bar.indexOf(inputValue) >= 0 || userInfo.reson.indexOf(inputValue) >= 0) { //匹配name，id，bar,reson
-            userInfoStr = JSON.stringify(userInfo);
-            str += '<tr data-value=' + userInfoStr + '>'+
-                        '<td style="width:100px">' + userInfo.name + '</td>'+
-                        '<td style="width:100px">' + userInfo.id + '</td>'+
-                        '<td style="width:75px">' + userInfo.bar + '</td>'+
-                        '<td style="width:75px">' + userInfo.reson + '</td>'+
-                        '<td style="width:50px"><input type="button" class="deletThis" value="删除"/></td>'+
-                    '</tr>';
+            $List.eq(i).css('display','block');
+        }else{
+             $List.eq(i).css('display','none');
         }
     } //for
-    $("#showList").html(str);
 }
 //将脚本还原到最初状态
 function clearall(){
@@ -392,7 +438,99 @@ function clearall(){
     GM_setValue('setting-opa', defaultdConfig.opacity); //默认遮罩透明度
     GM_setValue('setting-gus', defaultdConfig.blurpx); //默认遮罩下的高斯模糊半径
 }
-
+//注册菜单
+GM_registerMenuCommand("控制面板", showPannle);
+//显示控制面板
+function showPannle(){
+    if( $("#pannal").length>=1 ){//已存在
+        return;
+    }
+    var oFragment = document.createDocumentFragment(),//创建文档碎片
+        pannal = document.createElement('div'),//控制面板
+        pannal_wrap = pannal.cloneNode(false),//遮罩层
+        config = {
+            "blockWay": GM_getValue('setting-blockWay', defaultdConfig.blockWay),//屏蔽方式
+            "color": GM_getValue('setting-col', defaultdConfig.color),//遮罩颜色
+            "opacity": GM_getValue('setting-opa', defaultdConfig.opacity),//遮罩透明度
+            "blur": GM_getValue('setting-gus', defaultdConfig.blurpx)//高斯模糊
+        };
+    $(pannal_wrap).attr("id","wrap");
+    $(pannal).attr("id","pannal");
+    pannal.innerHTML = 
+        '<h3 id="pannal-tittle" style="cursor:move;font-size:20px;line-height:20px;color:#fff;background:#165557;">配置参数</h3>'+
+        '<div id="pannal-setting">'+
+        '    屏蔽方式：<select id="blockWay">'+
+        '                <option>遮罩屏蔽</option>'+
+        '                <option>删除节点</option>'+
+        '            </select><br/>'+
+        '    遮罩层颜色：<input id="col" type="color" value="'+config.color+'" /><br/>'+
+        '    遮罩透明度(0~1)：<span id="opa-text">'+config.opacity+'</span><input id="opa" type="range" value="'+config.opacity+'" min="0" max="1" step="0.1" /><br/>'+
+        '    高斯模糊像素(0~10)：<span id="gus-text">'+config.blur+'</span><input id="gus" type="range" value="'+config.blur+'" min="0" max="10" step="1" /><br/>'+
+        '</div>'+
+        '<hr/>'+
+        '<h3>添加讨厌鬼</h3>'+
+        '<div id="addBlackList">'+
+        '    数字ID(选填)：<input id="userId" type="text" placeholder="user_id"/><br/>'+
+        '    贴吧ID(必填)：<input id="userName" type="text" placeholder="user_name" list="lst" autocomplete="off"/><br/>'+
+        '    <datalist id="lst" autocomplete="on"></datalist>'+
+        '    所在贴吧：<input id="curBar" type="text" value="'+barName()+'" /><br/>'+
+        '    屏蔽原因：<input id="reson" type="text" list="lstr" value="" />'+
+        '</div>'+
+        '<hr/>'+
+        '<h3>功能</h3>'+
+        '<div id="fn">'+
+        '    <input id="save" type="button" value="保存" />'+
+        '    <input id="clear" type="button" value="初始化" />'+
+        '    <input id="view" type="button" value="列表" />'+
+        '</div>'+
+        '<div id="list" style="margin:0;">'+
+        '    <input id="sear" type="text" list="BlackList" placeholder="搜索" autocomplete="off" />'+
+        '    <table id="showList"></table>'+
+        '</div>'+
+        '<div id="block-keyWord">'+
+        '    <input type="text" placeholder="输入关键字" id="blockWord" /><input type="button" value="添加" id="addWord" /></br>'+
+        '    <div id="tag-area"></div>'+
+        '    <input type="button" value="查看日志" id="showLog" />'+
+        '    <div id="tag-log"></div>'+
+        '</div>'+
+        '<span id="queit">X</span>';
+    oFragment.appendChild(pannal);
+    oFragment.appendChild(pannal_wrap);
+    document.body.className = 'blur';
+    document.documentElement.appendChild(oFragment);
+    //居中
+    $(pannal).css({
+        "top": ($().size('clientHeight') - pannal.offsetHeight) / 2 + "px",
+        "left":($().size('clientWidth') - pannal.offsetWidth) / 2 + "px"
+    });
+    //初始化数据
+    $('#blockWay').attr('value',GM_getValue('setting-blockWay', defaultdConfig.blockWay) );//屏蔽方式
+    //生成屏蔽名单列表
+    createList();   
+    //生成关键字标签
+    key().createTag();
+    //可拖拽
+    $().drag( $('#pannal-tittle').get(0),pannal );
+    //展开收起
+    var height = parseInt( pannal.offsetHeight );
+    $('#view').toggle(function(){
+        $('#list').animate({"height":height},{"end":function(){
+            $(this).css({
+                "height":height,
+                "overflow-y":"auto"
+            });
+        }});
+        $('#block-keyWord').animate({"height":height},{"end":function(){
+            $(this).css({
+                "height":height,
+                "overflow-y":"auto"
+            });
+        }});
+    },function(){
+        $('#list').animate({"height":"0"});
+        $('#block-keyWord').animate({"height":"0"});
+    });
+}
 //==============主要对象=================
 function init(){
     return new Init();
@@ -520,7 +658,7 @@ Init.prototype.autoTips = function(){
     $("#lst").html(str);
 };
 //关键字过滤
-var log = [];
+var log = [];//保存日志
 function key(){
     return new keyWord();
 }
@@ -661,6 +799,13 @@ $(window).bind({
         init().block();
         //关键字过滤
         key().filter();
+        //插入控制面板按钮
+        $('.u_setting').bind('mouseover',function(){
+            if( $('.u_pannal').length>0 ){
+                return;
+            }
+             $('<li class="u_pannal"></li>').html('<a href="#" id="showPannle" style="line-height:30px;">控制面板</a>').insertBefore(  $('.u_setting .u_logout').get(0) );
+        });
     },
     "load":function(){
         init().block();
@@ -670,12 +815,13 @@ $(window).bind({
                 init().block();
             });
         }else{
-            $('thread_list').ob().observer({"childList":true},function(){//帖子列表
+            $('#thread_list').ob().observer({"childList":true},function(){//帖子列表
                 init().block();
             });
         }
     }
 });
+
 $(document).bind('click',function(e){
     var target = e.target || e.srcElement,
         id=target.id || null;
@@ -878,6 +1024,10 @@ $(document).bind('click',function(e){
                 }
                 $("#tag-log").html(str);
                 break;
+            //显示控制面板
+            case "showPannle":
+                showPannle();
+                break;
             default:
                 return;
         }
@@ -914,102 +1064,12 @@ $(window).bind('keyup',function(e){
             createList();
             return;
         }
-    }else if(e.ctrlKey && e.keyCode == 114){//快捷键ctrl+F3
-        if( $("#pannal").length>=1 ){
-            return;
-        }
-        var oFragment = document.createDocumentFragment(),//创建文档碎片
-            pannal = document.createElement('div'),//控制面板
-            pannal_wrap = pannal.cloneNode(false),//遮罩层
-            config = {
-                "blockWay": GM_getValue('setting-blockWay', defaultdConfig.blockWay),//屏蔽方式
-                "color": GM_getValue('setting-col', defaultdConfig.color),//遮罩颜色
-                "opacity": GM_getValue('setting-opa', defaultdConfig.opacity),//遮罩透明度
-                "blur": GM_getValue('setting-gus', defaultdConfig.blurpx)//高斯模糊
-            };
-        $(pannal_wrap).attr("id","wrap");
-        $(pannal).attr("id","pannal");
-        pannal.innerHTML = 
-            '<h3 id="pannal-tittle" style="cursor:move;font-size:20px;line-height:20px;color:#fff;background:#165557;">配置参数</h3>'+
-            '<div id="pannal-setting">'+
-            '    屏蔽方式：<select id="blockWay">'+
-            '                <option>遮罩屏蔽</option>'+
-            '                <option>删除节点</option>'+
-            '            </select><br/>'+
-            '    遮罩层颜色：<input id="col" type="color" value="'+config.color+'" /><br/>'+
-            '    遮罩透明度(0~1)：<span id="opa-text">'+config.opacity+'</span><input id="opa" type="range" value="'+config.opacity+'" min="0" max="1" step="0.1" /><br/>'+
-            '    高斯模糊像素(0~10)：<span id="gus-text">'+config.blur+'</span><input id="gus" type="range" value="'+config.blur+'" min="0" max="10" step="1" /><br/>'+
-            '</div>'+
-            '<hr/>'+
-            '<h3>添加讨厌鬼</h3>'+
-            '<div id="addBlackList">'+
-            '    数字ID(选填)：<input id="userId" type="text" placeholder="user_id"/><br/>'+
-            '    贴吧ID(必填)：<input id="userName" type="text" placeholder="user_name" list="lst" autocomplete="off"/><br/>'+
-            '    <datalist id="lst" autocomplete="on"></datalist>'+
-            '    所在贴吧：<input id="curBar" type="text" value="'+barName()+'" /><br/>'+
-            '    屏蔽原因：<input id="reson" type="text" list="lstr" value="" />'+
-            '</div>'+
-            '<hr/>'+
-            '<h3>功能</h3>'+
-            '<div id="fn">'+
-            '    <input id="save" type="button" value="保存" />'+
-            '    <input id="clear" type="button" value="初始化" />'+
-            '    <input id="view" type="button" value="列表" />'+
-            '</div>'+
-            '<div id="list" style="margin:0;">'+
-            '    <input id="sear" type="text" list="BlackList" placeholder="搜索" autocomplete="off" />'+
-            '    <table id="showList"></table>'+
-            '</div>'+
-            '<div id="block-keyWord">'+
-            '    <input type="text" placeholder="输入关键字" id="blockWord" /><input type="button" value="添加" id="addWord" /></br>'+
-            '    <div id="tag-area"></div>'+
-            '    <input type="button" value="查看日志" id="showLog" />'+
-            '    <div id="tag-log"></div>'+
-            '</div>'+
-            '<span id="queit">X</span>';
-        oFragment.appendChild(pannal);
-        oFragment.appendChild(pannal_wrap);
-        document.body.className = 'blur';
-        document.documentElement.appendChild(oFragment);
-        //居中
-        $(pannal).css({
-            "top": ($().size('clientHeight') - pannal.offsetHeight) / 2 + "px",
-            "left":($().size('clientWidth') - pannal.offsetWidth) / 2 + "px"
-        });
-        //初始化数据
-        $('#blockWay').attr('value',GM_getValue('setting-blockWay', defaultdConfig.blockWay) );//屏蔽方式
-        //生成屏蔽名单列表
-        createList();   
-        //生成关键字标签
-        // creatTag();
-        key().createTag();
-        //可拖拽
-        $().drag( $('#pannal-tittle').get(0),pannal );
-        //展开收起
-        $('#view').toggle(function(){
-            var height = parseInt( pannal.offsetHeight );
-            $('#list').animate({"height":height},{"end":function(){
-                $(this).css({
-                    "display":"block",
-                    "height":height,
-                    "overflow":"auto"
-                });
-            }});
-            $('#block-keyWord').animate({"height":height},{"end":function(){
-                $(this).css({
-                    "disable":"block",
-                    "height":height,
-                    "overflow":"auto"
-                });
-            }});
-        },function(){
-            $('#list').animate({"height":"0"});
-            $('#block-keyWord').animate({"height":"0"});
-        });
+    }else if(e.ctrlKey && e.keyCode == 114){//快捷键ctrl+F3，显示控制面板
+        showPannle();
     }
 });
 
 //==============样式=================
-var style = 'body{-webkit-backface-visibility:hidden}.blur{filter:blur(5px) grayscale(1);-webkit-filter:blur(5px) grayscale(1);-moz-filter:blur(5px) grayscale(1);-o-filter:blur(5px) grayscale(1);-ms-filter:blur(5px) grayscale(1)}#pannal{width:200px;height:auto;background:#263238;color:#fff;position:fixed;z-index:1000000000;text-align:center;box-shadow:0 0 20px 5px #000000}#pannal>div{margin:10px 0}#pannal input{color:#3e3e3e;border:1px solid transparent;height:20px;line-height:20px}#pannal input:focus{background-color:#263238;color:#fff;border:1px solid;-webkit-transition:all 0.2s ease-in-out;transition:all 0.2s ease-in-out}#pannal h3{color:#00ffe2}#pannal-setting input[type=range]{width:80%}#fn input{padding:5px 10px;margin:0 5px;cursor:pointer}#fn input:hover{background:#004d40;color:#fff}#pannal>span#queit{position:absolute;width:21px;height:21px;line-height:21px;font-size:21px;top:0;right:0;cursor:pointer;opacity:0.8;background:#fff;color:#303030}#blockWay{color:#3e3e3e;border:none}#wrap{position:fixed;width:100%;height:100%;background:rgba(155,155,155,0.5);top:0;left:0;z-index:999999999}.mar{width:100%;height:100%;position:absolute;top:0;left:0;z-index:999999998;-webkit-backface-visibility:hidden;text-align:center;font-size:16px}.mar input{background:#303030;color:#fff;padding:5px 10px;margin:5px 10px;font-family:"宋体";font-size:14px;border:none}.mar input:hover{background:#004d40;-webkit-transition:all 0.2s ease-in-out;transition:all 0.2s ease-in-out}.mar p{color:#2B2929;font-weight:bold;background-color:rgba(72,70,70,0.35);line-height:30px;width:60%;margin:0 auto}.mar p:hover{color:#fff;background-color:#004d40;-webkit-transition:all 0.2s ease-in-out;transition:all 0.2s ease-in-out}#list{position:absolute;top:0;left:200px;width:400px;height:0;overflow:hidden;background:inherit;margin:0}#list tr:hover{background:#004d40;-webkit-transition:all 0.2s ease-in-out;transition:all 0.2s ease-in-out}.key{float:left;clear:both;margin-left:10px;width:120px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.col{border:none}.deletThis{float:right;cursor:pointer;margin-right:10px;padding:0 5px;border:0;height:18px}.disable-btn{background:#6B6B6B;cursor:not-allowed}#addBlackList input{width:80%}#thread_list>li[data-field] .threadlist_lz>.threadlist_author:hover,.l_post .d_name:hover{background:#004d40;-webkit-transition:all 0.2s ease-in-out;transition:all 0.2s ease-in-out}#sear{position:relative;margin:0 auto;text-align:center;height:21px;width:100%;border:none}#confirmBox{width:300px;background:rgba(5,49,43,0.8);position:fixed;left:50%;top:60px;margin-left:-150px;text-align:center;z-index:999999;opacity:0;box-shadow:1px 1px 10px 2px #000000}#confirmBox input{border:none;padding:10px 30px;margin:10px;cursor:pointer}#confirmBox input:hover{background:#004d40;-webkit-transition:all 0.2s ease-in-out;transition:all 0.2s ease-in-out}#confirmBox p{font-size:18px;color:#fff;margin-top:20px}#block-keyWord{position:absolute;top:0;right:100%;width:200px;height:0;margin:0 !important;padding:0;background-color:inherit;overflow:auto}span.blockTag{padding:5px 10px;display:inline-block;border:1px solid;border-radius:5px;position:relative;margin:2px 5px}span.blockTag:hover{background:#08454A}#blockWord{margin:10px 0}#addWord{padding:0 5px !important;background-color:transparent !important;border:1px solid #fff !important;color:#fff !important}#addWord:hover{background-color:#015444 !important}#tag-log>p{margin:10px 0;text-align:left;text-indent:2em;line-height:2em}#tag-log>p:hover{background:#004d40;-webkit-transition:all 0.2s ease-in-out;transition:all 0.2s ease-in-out}';
+var style = 'body{-webkit-backface-visibility:hidden}.blur{filter:blur(5px) grayscale(1);-webkit-filter:blur(5px) grayscale(1);-moz-filter:blur(5px) grayscale(1);-o-filter:blur(5px) grayscale(1);-ms-filter:blur(5px) grayscale(1)}#pannal{width:200px;height:auto;background:#263238;color:#fff;position:fixed;z-index:1000000000;text-align:center;box-shadow:0 0 20px 5px #000000}#pannal>div{margin:10px 0}#pannal input{color:#3e3e3e;border:1px solid transparent;height:20px;line-height:20px}#pannal input:focus{background-color:#263238;color:#fff;border:1px solid;-webkit-transition:all 0.2s ease-in-out;transition:all 0.2s ease-in-out}#pannal h3{color:#00ffe2}#pannal-setting input[type=range]{width:80%}#fn input{padding:5px 10px;margin:0 5px;cursor:pointer}#fn input:hover{background:#004d40;color:#fff}#pannal>span#queit{position:absolute;width:21px;height:21px;line-height:21px;font-size:21px;top:0;right:0;cursor:pointer;opacity:0.8;background:#fff;color:#303030}#blockWay{color:#3e3e3e;border:none}#wrap{position:fixed;width:100%;height:100%;background:rgba(155,155,155,0.5);top:0;left:0;z-index:999999999}.mar{width:100%;height:100%;position:absolute;top:0;left:0;z-index:999999998;-webkit-backface-visibility:hidden;text-align:center;font-size:16px}.mar input{background:#303030;color:#fff;padding:5px 10px;margin:5px 10px;font-family:"宋体";font-size:14px;border:none}.mar input:hover{background:#004d40;-webkit-transition:all 0.2s ease-in-out;transition:all 0.2s ease-in-out}.mar p{color:#2B2929;font-weight:bold;background-color:rgba(72,70,70,0.35);line-height:30px;width:60%;margin:0 auto}.mar p:hover{color:#fff;background-color:#004d40;-webkit-transition:all 0.2s ease-in-out;transition:all 0.2s ease-in-out}#list{position:absolute;top:0;left:200px;width:400px;height:0;overflow-x:hidden;overflow-y:auto;background:inherit;margin:0}#list tr:hover{background:#004d40;-webkit-transition:all 0.2s ease-in-out;transition:all 0.2s ease-in-out}.key{float:left;clear:both;margin-left:10px;width:120px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.col{border:none}.deletThis{float:right;cursor:pointer;margin-right:10px;padding:0 5px;border:0;height:18px}.disable-btn{background:#6B6B6B;cursor:not-allowed}#addBlackList input{width:80%}#thread_list>li[data-field] .threadlist_lz>.threadlist_author:hover,.l_post .d_name:hover{background:#004d40;-webkit-transition:all 0.2s ease-in-out;transition:all 0.2s ease-in-out}#sear{position:relative;margin:0 auto;text-align:center;height:21px;width:100%;border:none}#confirmBox{width:300px;background:rgba(5,49,43,0.8);position:fixed;left:50%;top:60px;margin-left:-150px;text-align:center;z-index:999999;opacity:0;box-shadow:1px 1px 10px 2px #000000}#confirmBox input{border:none;padding:10px 30px;margin:10px;cursor:pointer}#confirmBox input:hover{background:#004d40;-webkit-transition:all 0.2s ease-in-out;transition:all 0.2s ease-in-out}#confirmBox p{font-size:18px;color:#fff;margin-top:20px}#block-keyWord{position:absolute;top:0;right:100%;width:200px;height:0;margin:0 !important;padding:0;background-color:inherit;overflow:auto}span.blockTag{padding:5px 10px;display:inline-block;border:1px solid;border-radius:5px;position:relative;margin:2px 5px}span.blockTag:hover{background:#08454A}#blockWord{margin:10px 0}#addWord{padding:0 5px !important;background-color:transparent !important;border:1px solid #fff !important;color:#fff !important}#addWord:hover{background-color:#015444 !important}#tag-log>p{margin:10px 0;text-align:left;text-indent:2em;line-height:2em}#tag-log>p:hover{background:#004d40;-webkit-transition:all 0.2s ease-in-out;transition:all 0.2s ease-in-out}';
 GM_addStyle(style);
 })(window,document);
