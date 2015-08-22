@@ -27,32 +27,31 @@
     }
 
     function RemoveAds() {
-        var adlist = document.querySelectorAll('#content_left>*'),
-            adlistLength = adlist.length,
-            id;
-        this.tip = document.querySelectorAll('.nums')[0];
-        for (var i = 0; i < adlistLength; i++) {
-            id = adlist[i].getAttribute("id");
-            if (id > 1000 || id === null) {
+        this.ads = document.querySelectorAll('#content_left>*');
+        this.length = this.ads.length;
+        for (var i = 0; i < this.length; i++) {
+            this.id = this.ads[i].getAttribute("id");
+            if (this.id > 1000 || this.id === null) {
                 num++;
-                adlist[i].style.cssText = "display: none !important;";
-                adlist[i].remove(this);
-                // console.log( adlist[i] );
+                this.ads[i].style.cssText = "display: none !important;";
+                this.ads[i].remove(this);
+                // console.log( this.ads[i] );
                 this.showTip();
             }
         }
     }
-    //记录已过滤的广告数
     var num = 0;
     RemoveAds.prototype.showTip = function() {
+        this.tip = document.querySelectorAll('.nums')[0];
         if (this.tip) {
-            var span = document.querySelectorAll('span.adTip')[0] || document.createElement('span');
-            if (document.querySelectorAll('span.adTip').length > 0) {
-                span.textContent = "……已过滤" + num + "条推广链接";
+            this.tipWord = document.querySelectorAll('span.adTip')[0];
+            this.span = this.tipWord || document.createElement('span');
+            if (this.tipWord) {
+                this.span.textContent = "……已过滤" + num + "条推广链接";
             } else {
-                span.textContent = "……已过滤" + num + "条推广链接";
-                span.className = "adTip";
-                this.tip.appendChild(span);
+                this.span.textContent = "……已过滤" + num + "条推广链接";
+                this.span.className = "adTip";
+                this.tip.appendChild(this.span);
             }
         }
     };
