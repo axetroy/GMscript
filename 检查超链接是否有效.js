@@ -43,6 +43,7 @@ function addEvent(obj, type, fn){
 			}, false)
 			 :
 			obj.attachEvent('on' + type, function(e){
+				var ev = window.event ? window.event : (e ? e : null);
 				ev.target = ev.target || ev.srcElement;
 				if(fn.call(obj,ev)===false ){
 					e.cancelBubble = true;//阻止冒泡
@@ -159,11 +160,11 @@ function init(){
 				a.setAttribute('visited',"true");
 				a.removeAttribute('checking');
 				jugg.push(true);
-				//所有组运行完毕
+				//所有组请求响应完毕
 				if (num >= newInViewPort.length) {//newInViewPort.length==10最大
 						return;
 				}
-				//当这组运行完毕
+				//当前组请求响应完毕，则进行下一组
 				if( jugg.length >= newInViewPort[index].length - 1 ){
 					start(num++);
 				}
@@ -173,11 +174,11 @@ function init(){
 				a.setAttribute('visited',"false");
 				a.removeAttribute('checking');
 				jugg.push(true);
-				//所有组运行完毕
+				//所有组请求响应完毕，则停止
 				if (num >= newInViewPort.length ) {//newInViewPort.length==10最大
 						return;
 				}
-				//当这组运行完毕
+				//当前组请求响应完毕，则进行下一组
 				if( jugg.length >= newInViewPort[index].length - 1 ){
 					start(num++);
 				}
