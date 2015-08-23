@@ -6,8 +6,8 @@
 // @include     *www.baidu.com*
 // @grant		GM_xmlhttpRequest
 // @run-at      document-start
-// @compatible  chrome  推荐
-// @compatible  firefox  不推荐
+// @compatible  chrome  完美运行
+// @compatible  firefox  完美运行
 // @license     The MIT License (MIT); http://opensource.org/licenses/MIT
 // @supportURL      http://www.burningall.com
 // @contributionURL troy450409405@gmail.com|alipay.com
@@ -15,25 +15,21 @@
 // ==/UserScript==
 
 (function(document){
-//=====配置规则======
-var macthList = [
-	{
-		hostname:'www.baidu.com',
-		rule:'a[href*="www.baidu.com/link?url"]:not([transcoding]):not([transcoded])'
-	},
-	{
-		hostname:'www.google.com',
-		rule:''
+//=====配置参数======
+var config = {
+	macthRules: 'a[href*="www.baidu.com/link?url"]:not([transcoding]):not([transcoded])',//需要跳转的链接
+	reloadRules: 'a[transcoded*="false"]',//请求失败，需要再次请求的链接
+	isAnimate: true,//是否需要动画
+	hasOb: true//判断是否已监听
+};
+//匹配正则
+var regRules = {
+	isJumpLink : /www.baidu.com\/link\?url=/ig,
+	sliceResponse : {
+		step1 : /.*window\.location\.replace\(\"(.*)\"\).*$/img,
+		step2 : /^(.*)(<noscript>.*<\/noscript>$)/img
 	}
-];
-function getRules(){
-	for(var i=0;i<macthList.length;i++){
-		// console.log( macthList[i] );
-		if(location.hostname==macthList[i].hostname){
-			return macthList[i].rule;
-		}
-	}
-}
+};
 //======监听=======
 function addEvent(obj, type, fn){
 	return obj.addEventListener ?
@@ -83,10 +79,10 @@ function ob(target,config,fn){
 }
 //======公共函数=======
 function addStyle(){
-	if( document.getElementById('transcoded') ){
+	if( config.isAnimate===false || document.getElementById('transcoded') ){
 		return;
 	}
-	var cssString = 'a[transcoded]:before {content: "";position:absolute;width: 0;height: 100%;line-height: 100%;display: inline-block;background: rgba(43, 138, 23, 0.5);animation:moveDown 1s ease-in-out 0.2s backwards;}@keyframes moveDown{0%{width:0;}80%{width:100%;}100%{width:0;}}@-webkit-keyframes moveDown{0%{width:0;}80%{width:100%;}100%{width:0;display:none;}}';
+	var cssString = 'a[transcoded]{position:relative}a[transcoded*="false"]:before{background:rgba(197,31,32,0.5)}a[transcoded*="true"]:before{background:rgba(43,138,23,0.5)}a[transcoded]:before{content:"";position:absolute;width:0;height:100%;line-height:100%;display:inline-block;animation:slide 1s ease-in-out .2s backwards}@keyframes slide{0%{width:0}80%{width:100%}100%{width:0}}@-webkit-keyframes slide{0%{width:0}80%{width:100%}100%{width:0}}@-moz-keyframes slide{0%{width:0}80%{width:100%}100%{width:0}}';
 	var style = document.createElement('style');
 	var css = document.createTextNode(cssString);
 	style.type = "text/css";
@@ -121,13 +117,12 @@ function transcode(urlLink,a,secFn){
 	  	if(response.readyState==4){
 	  		var status = response.status+'';
 	  		if( status.charAt(0)=="4" || status.charAt(0)=="5" ){//4XX，5XX错误
-	  			console.log( response.status );
+	  			// console.log( response.status );
 	  			a.removeAttribute("transcoding");
 	  			a.setAttribute("transcoded","false");
 	  		}else{
-	  			var reg1 = /.*window\.location\.replace\(\"(.*)\"\).*$/img;
-	  			var reg2 = /^(.*)(<noscript>.*<\/noscript>$)/img;
-	  			var url = response.responseText.replace(reg1,"$1").replace(reg2,'$1');
+	  			var url = response.responseText.replace(regRules.sliceResponse.step1,"$1").replace(regRules.sliceResponse.step2,'$1');
+	  			a.setAttribute('jump-link',urlLink);
 	  			a.removeAttribute("transcoding");
 	  			a.setAttribute("transcoded","true");
 	  			secFn(a,url);
@@ -136,52 +131,47 @@ function transcode(urlLink,a,secFn){
 	  }
 	});
 }
-function init(){
-	var links = document.querySelectorAll(getRules()),
+function init(rules){
+	var links = document.querySelectorAll(rules),
 		inViewPort = [],
 		a = null,
 		href = "";
 	for(var j=0;j<links.length;j++){
-		a = links[j];
+		a = links[j];//所有的跳转链接
 		if( visible( links[j] ) ){
 			inViewPort.push( links[j] );
 		}
 	}
-	// console.log( inViewPort.length );
 	if( inViewPort.length<=0 ){
 		return;
 	}
 	addStyle();
 	for( var i=0;i<inViewPort.length;i++ ){
-		a = inViewPort[i];
+		a = inViewPort[i];//可视区域内的跳转链接
+		if( regRules.isJumpLink.test( a.href )===true ){
+			continue;
+		}
 		href = a.href.replace("http","https") + "&wd=&eqid=0";
 		transcode(href,a,function(a,url){
 			a.href = url;
-			a.style.position = 'relative';
-			setTimeout(function(){
-			},2000);
 		});
 	}
 }
 //======执行=======
-//判断是否已监听
-var hasOb = false;
-//判断url是否符合百度跳转
-var urlReg = /www.baidu.com\/link\?url=/ig;
 bind(document,{
 	"DOMContentLoaded":function(){
-		init();
+		init(config.macthRules);
 		ob(document,{
 			"childList":true,
 			"subtree":true
 		},function(){
-			init();
-			hasOb = true;
+			init(config.macthRules);
+			config.hasOb = true;
 		});
 	},
 	"mouseover":function(e){
-		if( e.target.tagName=="A" && urlReg.test(e.target.href) ){
-			var a = e.target;
+		var a = e.target;
+		if( a.tagName=="A" && regRules.isJumpLink.test(a.href) && a.getAttribute('transcoded')!=="true" ){
 			var href = a.href.replace("http","https") + "&wd=&eqid=0";
 			transcode(href,a,function(a,url){
 				a.href = url;
@@ -190,18 +180,20 @@ bind(document,{
 	}
 });
 bind(window,{
-	"scroll":init,
+	"scroll":function(){
+		init(config.macthRules);
+		init(config.reloadRules);
+	},
 	"load":function(){
-		if(hasOb){
+		if(config.hasOb){
 			return;
 		}
-		console.log('onload');
-		init();
+		init(config.macthRules);
 		ob(document,{
 			"childList":true,
 			"subtree":true
 		},function(){
-			init();
+			init(config.macthRules);
 		});		
 	}
 });
