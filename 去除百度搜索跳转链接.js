@@ -2,7 +2,7 @@
 // @name    remove the jump link in BAIDU
 // @author  burningall
 // @description 去除百度搜索跳转链接
-// @version     2015.8.23.2.0
+// @version     2015.8.24
 // @include     *www.baidu.com*
 // @grant		GM_xmlhttpRequest
 // @run-at      document-start
