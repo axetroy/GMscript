@@ -125,11 +125,15 @@ function init(){
 	 * <a href="javascript:;"></a>	||	<a href="javascript:void(0);"></a>
 	 * <a href="#"></a>
 	 */
-	var link = document.querySelectorAll('a[href]:not([href^="javascript"]):not([href$="#"]):not([checking]):not([visited])');
+	// document.querySelectorAll('a[href]');
+	var link = document.querySelectorAll('a[href]:not([href*="logout"]):not([href*="login"]):not([href^="javascript"]):not([href$="#"]):not([checking]):not([visited])');
 	var inViewPort = [];
 	var a;
 	for(var i=0;i<link.length;i++){
 		a = link[i];
+		if(a.getElementsByTagName('img').length>0 || a.innerHTML =="登陆" || a.innerHTML =="退出" || a.innerText =="login" || a.innerText =="logout" || a.textContent =="login" || a.textContent =="logout" ){
+			continue;
+		}
 		if( visible(a) && a.href!=="" ){
 			inViewPort.push(a);
 		}
@@ -137,7 +141,7 @@ function init(){
 	// console.log( inViewPort.length );\
 	//切割数组
 	var newInViewPort = slice(inViewPort);
-	if( inViewPort.length<1 || newInViewPort.length<1 || inViewPort.length>300 ){
+	if( inViewPort.length<1 || newInViewPort.length<1 || inViewPort.length>200 ){
 		return;
 	}
 	//计时器
@@ -193,25 +197,26 @@ function init(){
 
 addEvent(document,'mouseover',function(e){
 	var target = e.target || e.srcElement;
-	if( target.tagName == "A" && config.rules.test(target.href) ){
-		if( target.getAttribute('visited')==="true" ){
+	var a = target;
+	if( a.tagName == "A" && config.rules.test(a.href) ){
+		if( a.getElementsByTagName('img').length>0 || a.getAttribute('visited')==="true" || a.innerHTML =="登陆" || a.innerHTML =="退出" || a.innerText =="login" || a.innerText =="logout" || a.textContent =="login" || a.textContent =="logout" ){
 			return;
 		}
-		check(target.href,target,function(target){
+		check(a.href,a,function(a){
 			//加载成功
 			if( config.debug===true ){//开发者模式
 				target.style.cssText = "background:rgba(22, 189, 96, 0.75) !important; text-decoration:none !important;";
 			}
-			if( target.getAttribute('visited') && target.getAttribute('visited')=="false" ){
-				target.style.cssText = "background:none; text-decoration:none;";
+			if( a.getAttribute('visited') && a.getAttribute('visited')=="false" ){
+				a.style.cssText = "background:none; text-decoration:none;";
 			}
-			target.setAttribute('visited',"true");
-			target.removeAttribute('checking');
+			a.setAttribute('visited',"true");
+			a.removeAttribute('checking');
 		},function(){
 			//加载失败
-			target.style.cssText = "background:red; text-decoration:line-through;";
-			target.setAttribute('visited',"false");
-			target.removeAttribute('checking');
+			a.style.cssText = "background:red; text-decoration:line-through;";
+			a.setAttribute('visited',"false");
+			a.removeAttribute('checking');
 		});
 	}
 });

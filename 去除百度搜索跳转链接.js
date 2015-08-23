@@ -4,7 +4,6 @@
 // @description 去除百度搜索跳转链接
 // @version     2015.8.22
 // @include     *www.baidu.com*
-// @grant		GM_addStyle
 // @grant		GM_xmlhttpRequest
 // @run-at      document-start
 // @compatible  chrome  推荐
@@ -87,7 +86,7 @@ function addStyle(){
 	if( document.getElementById('transcoded') ){
 		return;
 	}
-	var cssString = 'a[transcoding]:before{content:"";width:1em;height:1em;line-height:1em;border-radius:50%;display:inline-block}a[transcoding]:before{background:yellow}a[transcoded]:before{content:"";width:1em;height:1em;line-height:1em;border-radius:50%;display:inline-block}a[transcoded]:before{background:green}';
+	var cssString = 'a[transcoded]:before {content: "";position:absolute;width: 0;height: 100%;line-height: 100%;display: inline-block;background: rgba(43, 138, 23, 0.5);animation:moveDown 1s ease-in-out 0.2s backwards;}@keyframes moveDown{0%{width:0;}80%{width:100%;}100%{width:0;}}@-webkit-keyframes moveDown{0%{width:0;}80%{width:100%;}100%{width:0;display:none;}}';
 	var style = document.createElement('style');
 	var css = document.createTextNode(cssString);
 	style.type = "text/css";
@@ -148,6 +147,7 @@ function init(){
 			inViewPort.push( links[j] );
 		}
 	}
+	// console.log( inViewPort.length );
 	if( inViewPort.length<=0 ){
 		return;
 	}
@@ -157,6 +157,9 @@ function init(){
 		href = a.href.replace("http","https") + "&wd=&eqid=0";
 		transcode(href,a,function(a,url){
 			a.href = url;
+			a.style.position = 'relative';
+			setTimeout(function(){
+			},2000);
 		});
 	}
 }
