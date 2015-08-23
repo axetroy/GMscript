@@ -2,7 +2,7 @@
 // @name    去除贴吧列表里面的广告
 // @author  burningall
 // @description 去除贴吧掺夹在【帖子列表】【回复列表】里的广告
-// @version     2015.8.1.1
+// @version     2015.8.24
 // @include         http://tieba.baidu.com/*
 // @run-at      document-start
 // @supportURL      http://www.burningall.com
