@@ -19,7 +19,7 @@
 var config = {
 	macthRules: 'a[href*="www.baidu.com/link?url"]:not([transcoding]):not([transcoded])',//需要跳转的链接
 	reloadRules: 'a[transcoded*="false"]',//请求失败，需要再次请求的链接
-	isAnimate: true,//是否需要动画
+	isAnimate: true,//是否需要请求动画
 	hasOb: true//判断是否已监听
 };
 //匹配正则
@@ -30,45 +30,56 @@ var regRules = {
 		step2 : /^(.*)(<noscript>.*<\/noscript>$)/img
 	}
 };
-//======监听=======
-function addEvent(obj, type, fn){
+//======事件对象=======
+function handler(obj){
+	return new Event(obj);
+}
+function Event(obj){
+	this.element = obj;
+	return this;
+}
+Event.prototype.addEvent = function(type,fn){
+	var obj = this.element;
+	var ev;
 	return obj.addEventListener ?
 			obj.addEventListener(type, function(e){
-				var ev = window.event ? window.event : (e ? e : null);
+				ev = window.event ? window.event : (e ? e : null);
+				ev.target = ev.target || ev.srcElement;
 				if( fn.call(obj,ev)===false ){
-					e.cancelBubble = true;//阻止冒泡
-					e.preventDefault();//chrome，firefox下阻止默认事件
+					ev.cancelBubble = true;//阻止冒泡
+					ev.preventDefault();//chrome，firefox下阻止默认事件
 				}
 			}, false)
 			 :
 			obj.attachEvent('on' + type, function(e){
-				var ev = window.event ? window.event : (e ? e : null);
+				ev = window.event ? window.event : (e ? e : null);
 				ev.target = ev.target || ev.srcElement;
 				if(fn.call(obj,ev)===false ){
-					e.cancelBubble = true;//阻止冒泡
+					ev.cancelBubble = true;//阻止冒泡
 					return false;//阻止默认事件，针对IE8
 				}
 			});
-}
-function bind(obj,type,fn){
-	//如果传入一个json参数
-	if(arguments.length==2){
+};
+Event.prototype.bind = function(type,fn){
+	var obj = this.element;
+	if(arguments.length==1){
 		for(var attr in type){
-			addEvent(obj,attr,type[attr]);
+			this.addEvent(attr,type[attr]);
 		}
 	}
-	//传入两个字符串参数
-	else if(arguments.length==3){
+	else if(arguments.length==2){
 		var events = type.split(' ');
 		var eventsLength = events.length;
 		var j=0;
 		while(j<eventsLength){
-			addEvent(obj,events[j],fn);
+			this.addEvent(events[j],fn);
 			j++;
 		}
 	}
-}
-function ob(target,config,fn){
+	return this;
+};
+Event.prototype.ob = function(config,fn){
+	var target = this.element;
     var MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver,
     observer = new MutationObserver(function(mutations){
             mutations.forEach(function(mutation) {
@@ -76,110 +87,113 @@ function ob(target,config,fn){
             });
         });
     observer.observe(target, config);
+    return this;
+};
+//======主体对象=======
+function init(agm){
+	return new Init(agm);
 }
-//======公共函数=======
-function addStyle(){
+function Init(agm){
+	if( !agm ){
+		return this;
+	}
+	this.agm = agm;
+	this.links = document.querySelectorAll(agm);
+	this.inViewPort = [];
+	this.a = null;
+	for(var j=0;j<this.links.length;j++){
+		this.a = this.links[j];
+		if( this.visible()===true ){
+			this.inViewPort.push( this.links[j] );
+		}
+	}
+	if( this.inViewPort.length<=0 ){
+		return;
+	}
+	this.addStyle();
+	for( var i=0;i<this.inViewPort.length;i++ ){
+		this.a = this.inViewPort[i];
+		this.transcode(this.a,function(url){
+			this.href = url;
+		});
+	}
+	return this;
+}
+Init.prototype.addStyle = function(){
 	if( config.isAnimate===false || document.getElementById('transcoded') ){
 		return;
 	}
-	var cssString = 'a[transcoded]{position:relative}a[transcoded*="false"]:before{background:rgba(197,31,32,0.5)}a[transcoded*="true"]:before{background:rgba(43,138,23,0.5)}a[transcoded]:before{content:"";position:absolute;width:0;height:100%;line-height:100%;display:inline-block;animation:slide 1s ease-in-out .2s backwards}@keyframes slide{0%{width:0}80%{width:100%}100%{width:0}}@-webkit-keyframes slide{0%{width:0}80%{width:100%}100%{width:0}}@-moz-keyframes slide{0%{width:0}80%{width:100%}100%{width:0}}';
-	var style = document.createElement('style');
-	var css = document.createTextNode(cssString);
-	style.type = "text/css";
-	style.id = "transcoded";
-	style.appendChild(css);
-	document.head.appendChild(style);
-}
-function visible(obj) {
+	this.cssString = 'a[transcoded]{position:relative}a[transcoded*="false"]:before{background:rgba(197,31,32,0.5)}a[transcoded*="true"]:before{background:rgba(43,138,23,0.5)}a[transcoded]:before{content:"";position:absolute;width:0;height:100%;line-height:100%;display:inline-block;animation:slide 1s ease-in-out .2s backwards;-webkit-animation:slide 1s ease-in-out .2s backwards;-moz-animation:slide 1s ease-in-out .2s backwards;-o-animation:slide 1s ease-in-out .2s backwards;-ms-animation:slide 1s ease-in-out .2s backwards}@keyframes slide{0%{width:0}80%{width:100%}100%{width:0}}@-webkit-keyframes slide{0%{width:0}80%{width:100%}100%{width:0}}@-moz-keyframes slide{0%{width:0}80%{width:100%}100%{width:0}}@-o-keyframes slide{0%{width:0}80%{width:100%}100%{width:0}}@-ms-keyframes slide{0%{width:0}80%{width:100%}100%{width:0}}';
+	this.css = document.createTextNode(this.cssString);
+	this.style = document.createElement('style');
+	this.style.id = "transcoded";
+	this.style.type = "text/css";
+	this.style.appendChild(this.css);
+	document.head.appendChild(this.style);
+};
+Init.prototype.visible = function(){
+	var obj = this.a;
     var pos = obj.getBoundingClientRect();
     if (document.documentElement.getBoundingClientRect) {
         var w = document.documentElement.clientWidth || document.body.clientWidth;
         var h = document.documentElement.clientHeight || document.body.clientHeight;
         var jugg = pos.top > h || pos.bottom < 0 || pos.left > w || pos.right < 0;
         if (jugg === true) {
-            //不可视
             return false;
         } else {
-            //可视
             return true;
         }
     }
-}
-function transcode(urlLink,a,secFn){
+};
+Init.prototype.transcode = function(a,secFn){
 	if( a.getAttribute("transcoded")=="true" ){
 		return;
 	}
+	var href = a.href.replace("http","https") + "&wd=&eqid=0";
 	a.setAttribute("transcoding","true");
 	GM_xmlhttpRequest({
 	  method: "GET",
-	  url: urlLink,
+	  url: href,
 	  onreadystatechange:function( response ){
 	  	if(response.readyState==4){
 	  		var status = response.status+'';
 	  		if( status.charAt(0)=="4" || status.charAt(0)=="5" ){//4XX，5XX错误
-	  			// console.log( response.status );
 	  			a.removeAttribute("transcoding");
 	  			a.setAttribute("transcoded","false");
 	  		}else{
 	  			var url = response.responseText.replace(regRules.sliceResponse.step1,"$1").replace(regRules.sliceResponse.step2,'$1');
-	  			a.setAttribute('jump-link',urlLink);
+	  			a.setAttribute('jump-link',href);
 	  			a.removeAttribute("transcoding");
 	  			a.setAttribute("transcoded","true");
-	  			secFn(a,url);
+	  			secFn.call(a,url);
 	  		}
 	  	}
 	  }
 	});
-}
-function init(rules){
-	var links = document.querySelectorAll(rules),
-		inViewPort = [],
-		a = null,
-		href = "";
-	for(var j=0;j<links.length;j++){
-		a = links[j];//所有的跳转链接
-		if( visible( links[j] ) ){
-			inViewPort.push( links[j] );
-		}
-	}
-	if( inViewPort.length<=0 ){
-		return;
-	}
-	addStyle();
-	for( var i=0;i<inViewPort.length;i++ ){
-		a = inViewPort[i];//可视区域内的跳转链接
-		if( regRules.isJumpLink.test( a.href )===true ){
-			continue;
-		}
-		href = a.href.replace("http","https") + "&wd=&eqid=0";
-		transcode(href,a,function(a,url){
-			a.href = url;
-		});
-	}
-}
+};
 //======执行=======
-bind(document,{
+
+handler(document).bind({
 	"DOMContentLoaded":function(){
 		init(config.macthRules);
-		ob(document,{
-			"childList":true,
-			"subtree":true
-		},function(){
-			init(config.macthRules);
-			config.hasOb = true;
-		});
 	},
 	"mouseover":function(e){
 		var a = e.target;
 		if( a.tagName=="A" && regRules.isJumpLink.test(a.href) && a.getAttribute('transcoded')!=="true" ){
 			var href = a.href.replace("http","https") + "&wd=&eqid=0";
-			transcode(href,a,function(a,url){
-				a.href = url;
+			init().transcode(a,function(url){
+				this.href = url;
 			});
 		}
 	}
+}).ob({
+	"childList":true,
+	"subtree":true
+},function(){
+	init(config.macthRules);
 });
-bind(window,{
+
+handler(window).bind({
 	"scroll":function(){
 		init(config.macthRules);
 		init(config.reloadRules);
@@ -189,13 +203,8 @@ bind(window,{
 			return;
 		}
 		init(config.macthRules);
-		ob(document,{
-			"childList":true,
-			"subtree":true
-		},function(){
-			init(config.macthRules);
-		});		
 	}
 });
+
 
 })(document);
