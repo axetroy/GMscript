@@ -20,12 +20,11 @@
 //======说明=======
 /*
 如果觉得卡顿
-请修改配置参数项
-
+请尝试修改配置参数项
 config.isAnimate:GM_getValue("isAnimate",false) 		关闭CSS3动画(默认开启)
 config.mixRequireMod:false 								关闭混合请求(默认开启)
 
-
+以下内容：
 不懂代码就不用管
 
 混合请求说明：存在两种请求方式
@@ -40,7 +39,7 @@ config.mixRequireMod:false 								关闭混合请求(默认开启)
 请求方式的统一性。
  */
 
-(function(document) {
+(function(window,document) {
 	//=====配置参数======
 	var config = {
 		macthRules: 'a[href*="www.baidu.com/link?url"]:not([transcoding]):not([transcoded]):not([transcodedall]):not(.m)', //需要跳转的链接
@@ -169,10 +168,8 @@ config.mixRequireMod:false 								关闭混合请求(默认开启)
 		return this;
 	}
 	Init.prototype.all = function(callBack){
-		var searchWord = document.getElementById('kw').value;
-		
-		var url = window.top.location.href.replace('https', 'http').replace(/(\&)(tn=\w+)(\&)/img, '$1' + 'tn=baidulocal' + '$3').replace(/(\&)(wd=\w+)(\&)/img, '$1' + 'wd='+ searchWord + '$3');
-		
+		var searchWord = document.getElementById('kw').value,
+			url = window.top.location.href.replace('https', 'http').replace(/(\&)(tn=\w+)(\&)/img, '$1' + 'tn=baidulocal' + '$3').replace(/(\&)(wd=\w+)(\&)/img, '$1' + 'wd='+ searchWord + '$3');
 		ajax(url,{
 			"beforeFn":function(url){
 				config.transcodingAll=true;
@@ -224,7 +221,7 @@ config.mixRequireMod:false 								关闭混合请求(默认开启)
 		}
 		for (var i = 0; i < this.inViewPortLength; i++) {
 			this.a = this.inViewPort[i];
-			if( this.a.getAttribute("all") ){
+			if( this.a.getAttribute("transcodedAll") ){
 				continue;
 			}
 			ajax(this.a.href.replace("http", "https") + "&wd=&eqid=0",{
@@ -246,13 +243,13 @@ config.mixRequireMod:false 								关闭混合请求(默认开启)
 		return this;
 	};
 	Init.prototype.addStyle = function() {
-		if (config.isAnimate === false || document.getElementById('transcoded')) {
+		if (config.isAnimate === false || document.getElementById('transcodedStyle')) {
 			return;
 		}
 		this.cssString = 'a[transcoded]{position:relative}a[transcoded*="false"]:before{background:rgba(197,31,32,0.5)}a[transcoded*="true"]:before{background:rgba(43,138,23,0.5)}a[transcoded]:before{content:"";position:absolute;width:0;height:100%;line-height:100%;display:inline-block;animation:slide 1s ease-in-out .2s backwards;-webkit-animation:slide 1s ease-in-out .2s backwards;-moz-animation:slide 1s ease-in-out .2s backwards;-o-animation:slide 1s ease-in-out .2s backwards;-ms-animation:slide 1s ease-in-out .2s backwards}@keyframes slide{0%{width:0}80%{width:100%}100%{width:0}}@-webkit-keyframes slide{0%{width:0}80%{width:100%}100%{width:0}}@-moz-keyframes slide{0%{width:0}80%{width:100%}100%{width:0}}@-o-keyframes slide{0%{width:0}80%{width:100%}100%{width:0}}@-ms-keyframes slide{0%{width:0}80%{width:100%}100%{width:0}}';
 		this.css = document.createTextNode(this.cssString);
 		this.style = document.createElement('style');
-		this.style.id = "transcoded";
+		this.style.id = "transcodedStyle";
 		this.style.type = "text/css";
 		this.style.appendChild(this.css);
 		document.head.appendChild(this.style);
@@ -333,4 +330,4 @@ config.mixRequireMod:false 								关闭混合请求(默认开启)
 		}
 	}
 	GM_registerMenuCommand("请求动画开关",turnAnimate);
-})(document);
+})(window,document);
