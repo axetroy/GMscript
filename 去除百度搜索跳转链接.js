@@ -158,12 +158,14 @@ config.mixRequireMod:false 								关闭混合请求(默认开启)
 		}
 		this.jumpLinks = document.querySelectorAll(agm);//获取到要跳转的A链接
 		this.inViewPort = [];//在可视区域内的跳转链接
-		for (var j = 0; j < this.jumpLinks.length; j++) {
+		this.jumpLinksLength = this.jumpLinks.length;
+		for (var j = 0; j < this.jumpLinksLength; j++) {
 			this.a = this.jumpLinks[j];
 			if (this.visible() === true) {
 				this.inViewPort.push(this.jumpLinks[j]);
 			}
 		}
+		this.inViewPortLength = this.inViewPort.length;
 		return this;
 	}
 	Init.prototype.all = function(callBack){
@@ -184,16 +186,18 @@ config.mixRequireMod:false 								关闭混合请求(默认开启)
 				var html = document.createElement('html');
 				html.innerHTML = response.replace(/http\:\/\/(.*)\.gif/img, "https://wwwbaidu.com"); //防止讨厌的http百度图片
 				
-				var requireAtag = html.querySelectorAll('.f>a');//请求得到的所有A标签
-				var info = {};//href：innerText
-				for (var i = 0; i < requireAtag.length; i++) {
+				var requireAtag = html.querySelectorAll('.f>a'),//请求得到的所有A标签
+					requireAtagLength = requireAtag.length,
+					info = {};//href：innerText
+				for (var i = 0; i < requireAtagLength; i++) {
 					if (typeof(info[requireAtag[i].href]) == "undefined") {
 						info[ requireAtag[i].href ] = getText( requireAtag[i] );
 					}
 				}
-				var currentAtag = document.querySelectorAll('.t>a:not(.OP_LOG_LINK):not([transcoded])');//当前页的A标签
+				var currentAtag = document.querySelectorAll('.t>a:not(.OP_LOG_LINK):not([transcoded])'),//当前页的A标签
+					currentAtagLength = currentAtag.length;
 				for (var href in info) {
-					for (var j = 0; j < currentAtag.length; j++) {
+					for (var j = 0; j < currentAtagLength; j++) {
 						if ( info[href].replace(/\s*/img, '') == getText( currentAtag[j] ).replace(/\s*/img,'') ) {
 							currentAtag[j].href = href;
 							currentAtag[j].setAttribute('transcodedAll','true');
@@ -215,10 +219,10 @@ config.mixRequireMod:false 								关闭混合请求(默认开启)
 		};
 	}
 	Init.prototype.onebyone = function(){
-		if (this.inViewPort.length <= 0) {
+		if (this.inViewPortLength <= 0) {
 			return;
 		}
-		for (var i = 0; i < this.inViewPort.length; i++) {
+		for (var i = 0; i < this.inViewPortLength; i++) {
 			this.a = this.inViewPort[i];
 			if( this.a.getAttribute("all") ){
 				continue;
@@ -274,8 +278,9 @@ config.mixRequireMod:false 								关闭混合请求(默认开启)
 		"DOMContentLoaded": function() {
 			if( config.transcodingAll===false ){
 				init().all(function() {
-					var inViewPortElement = init('a[transcodedAll]').inViewPort;
-					for( var i=0;i<inViewPortElement.length;i++ ){
+					var inViewPortElement = init('a[transcodedAll]').inViewPort,
+						inViewPortElementLength = inViewPortElement.length;
+					for( var i=0;i<inViewPortElementLength;i++ ){
 						inViewPortElement[i].setAttribute("transcoded","true");
 					}
 					init(config.macthRules).onebyone();
@@ -313,8 +318,9 @@ config.mixRequireMod:false 								关闭混合请求(默认开启)
 	handler(window).bind('scroll',function(){
 		init(config.macthRules).onebyone();
 		init(config.reloadRules).onebyone();
-		var inViewPortElement = init('a[transcodedAll]').inViewPort;
-		for( var i=0;i<inViewPortElement.length;i++ ){
+		var inViewPortElement = init('a[transcodedAll]').inViewPort,
+			inViewPortElementLength = inViewPortElement.length;
+		for( var i=0;i<inViewPortElementLength;i++ ){
 			inViewPortElement[i].setAttribute("transcoded","true");
 		}
 	});
