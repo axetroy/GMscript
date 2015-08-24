@@ -2,7 +2,7 @@
 // @name    remove the jump link in BAIDU
 // @author  burningall
 // @description 去除百度搜索跳转链接
-// @version     2015.8.24
+// @version     2015.8.25
 // @include     *www.baidu.com*
 // @grant		GM_setValue
 // @grant		GM_getValue
@@ -178,6 +178,7 @@ config.mixRequireMod:false 								关闭混合请求(默认开启)
 			},
 			"failFn":function(status,url){
 				this.setAttribute("transcoded","false");
+				console.log( '请求' + url + '结果：' + status );
 			},
 			"successFn":function(response,url){
 				var html = document.createElement('html');
@@ -208,7 +209,6 @@ config.mixRequireMod:false 								关闭混合请求(默认开启)
 		});
 	};
 	if( config.mixRequireMod===false ){
-		console.log( config.mixRequireMod );
 		Init.prototype.all = function(callBack){
 			if(callBack) callBack();
 			return;
