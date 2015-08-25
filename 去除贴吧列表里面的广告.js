@@ -3,8 +3,9 @@
 // @author  burningall
 // @description 去除贴吧掺夹在【帖子列表】【回复列表】里的广告
 // @version     2015.8.24
-// @include         http://tieba.baidu.com/*
+// @grant        none
 // @run-at      document-start
+// @include         http://tieba.baidu.com/*
 // @supportURL      http://www.burningall.com
 // @contributionURL troy450409405@gmail.com|alipay.com
 // @namespace https://greasyfork.org/zh-CN/users/3400-axetroy
@@ -14,7 +15,6 @@
     function handler(obj) {
         return new Event(obj);
     }
-
     function Event(obj) {
         this.element = obj;
         return this;
@@ -27,16 +27,16 @@
                 ev = window.event ? window.event : (e ? e : null);
                 ev.target = ev.target || ev.srcElement;
                 if (fn.call(obj, ev) === false) {
-                    ev.cancelBubble = true; //阻止冒泡
-                    ev.preventDefault(); //chrome，firefox下阻止默认事件
+                    ev.cancelBubble = true;
+                    ev.preventDefault();
                 }
             }, false) :
             obj.attachEvent('on' + type, function(e) {
                 ev = window.event ? window.event : (e ? e : null);
                 ev.target = ev.target || ev.srcElement;
                 if (fn.call(obj, ev) === false) {
-                    ev.cancelBubble = true; //阻止冒泡
-                    return false; //阻止默认事件，针对IE8
+                    ev.cancelBubble = true;
+                    return false;
                 }
             });
     };
@@ -68,59 +68,64 @@
         observer.observe(target, config);
         return this;
     };
-
     var count = {
         "adlist": 0,
         "keyword": 0
     };
-
     function init() {
         return new Init();
     }
-
     function Init() {
-        this.adlist = document.querySelectorAll('[data-daid],#thread_list>li:not([class~=j_thread_list]),#j_p_postlist>div:not([data-field])');
-        this.keyword = document.querySelectorAll('#j_p_postlist a[data-swapword],#j_p_postlist a.ps_cb');
+        this.adlistSelector = '[data-daid]:not([filted]),#thread_list>li:not([class~=j_thread_list]):not(.thread_top_list_folder):not([filted]),.p_postlist>.p_postlist>div:not([data-field]):not([filted])';
+        this.keywordSelector = '#j_p_postlist a[data-swapword]:not([filted]),#j_p_postlist a.ps_cb:not([filted])';
+        this.adlist = document.querySelectorAll(this.adlistSelector);
+        this.keyword = document.querySelectorAll(this.keywordSelector);
+        this.adlistLength =  this.adlist.length;
+        this.keywordLength =  this.keyword.length;
     }
     Init.prototype.filter = function() {
-        for (var i = 0; i < this.adlist.length; i++) {
-            if (this.adlist[i].className == "thread_top_list_folder") continue;
+        for (var i = 0; i < this.adlistLength; i++) {
             this.adlist[i].style.cssText = "display: none !important;";
-            this.adlist[i].remove(this);
-            // console.log(this.adlist[i]);
+            this.adlist[i].setAttribute("filted","true");
+            // this.adlist[i].remove(this);
             count.adlist++;
         }
-        for (var j = 0; j < this.keyword.length; j++) {
-            handler(this.keyword[j]).bind("click mouseover", function() {
-                return false;
-            });
+        for (var j = 0; j < this.keywordLength; j++) {
+            this.keyword[j].setAttribute("filted","true");
             this.keyword[j].removeAttribute('data-swapword');
             this.keyword[j].removeAttribute('class');
             this.keyword[j].removeAttribute('href');
             this.keyword[j].style.color = '#333';
-            // console.log(this.keyword[j]);
+            handler(this.keyword[j]).bind("click mouseover", function() {
+                return false;
+            });
             count.keyword++;
         }
         return this;
     };
-    Init.prototype.count = function(){
+    Init.prototype.count = function(callBack){
         this.ul = document.querySelectorAll('ul.nav_list');
         this.li = document.getElementById('filterTip') || document.createElement('li');
         this.li.id = "filterTip";
-        this.li.innerText = this.li.textContent = "已过滤：" + count.adlist + "条广告贴，" + count.keyword + "个关键字";
-        this.ul[0].appendChild(this.li);
-        // console.log( count.keyword );
+        if( this.li.innerText ){
+            this.li.innerText = "广告帖:" + count.adlist + "关键字:" + count.keyword + "";
+        }else{
+            this.li.textContent = "广告帖:" + count.adlist + "关键字:" + count.keyword + "";
+        }
+        if( !document.getElementById('filterTip') ){
+            this.ul[0].appendChild(this.li);
+        }
+        if (callBack) callBack();
         return this;
     };
-    handler(document).bind({
-        "DOMContentLoaded": function() {
+    handler(document).bind("DOMContentLoaded",function(){
+       init().filter().count();
+       var obElement = document.querySelector("#content") ? document.querySelector("#content") : document.querySelector("#j_p_postlist");
+        handler(obElement).ob({
+            "childList":true,
+            "subtree":true
+        },function(){
             init().filter().count();
-            handler(document).ob({
-                "childList": true,
-                "subtree": true
-            }, function() {
-                init().filter().count();
-            });
-        }
+        });
     });
 })(document);
