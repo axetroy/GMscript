@@ -2,7 +2,7 @@
 // @name    去除贴吧列表里面的广告
 // @author  burningall
 // @description 去除贴吧掺夹在【帖子列表】【回复列表】里的广告
-// @version     2015.8.25.1
+// @version     2015.8.25.2
 // @grant        none
 // @run-at      document-start
 // @include         http://tieba.baidu.com/*
@@ -76,7 +76,7 @@
         return new Init();
     }
     function Init() {
-        this.adlistSelector = '[data-daid]:not([filted]),#thread_list>li:not([class~=j_thread_list]):not(.thread_top_list_folder):not([filted]),.p_postlist>.p_postlist>div:not([data-field]):not([filted])';
+        this.adlistSelector = '[data-daid]:not([filted]),#thread_list>li:not([class~=j_thread_list]):not(.thread_top_list_folder):not([filted]),#j_p_postlist>div:not([data-field]):not([filted])';
         this.keywordSelector = '#j_p_postlist a[data-swapword]:not([filted]),#j_p_postlist a.ps_cb:not([filted])';
         this.adlist = document.querySelectorAll(this.adlistSelector);
         this.keyword = document.querySelectorAll(this.keywordSelector);
