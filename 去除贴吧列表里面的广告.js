@@ -2,7 +2,7 @@
 // @name    去除贴吧列表里面的广告
 // @author  burningall
 // @description 去除贴吧掺夹在【帖子列表】【回复列表】里的广告
-// @version     2015.8.25.3
+// @version     2015.8.25.4
 // @grant        none
 // @run-at      document-start
 // @include         http://tieba.baidu.com/*
@@ -89,7 +89,7 @@
             this.adlist[i].style.cssText = "display: none !important;";
             this.adlist[i].setAttribute("filted","true");
             console.log( this.adlist[i] );
-            // this.adlist[i].remove(this);
+            this.hadAdd = true;
             count.adlist++;
         }
         for (var j = 0; j < this.keywordLength; j++) {
@@ -99,6 +99,7 @@
             this.keyword[j].removeAttribute('class');
             this.keyword[j].removeAttribute('href');
             this.keyword[j].style.color = '#333';
+            this.hadAdd = true;
             console.log( this.keyword[j] );
             handler(this.keyword[j]).bind("click mouseover", function() {
                 return false;
@@ -108,6 +109,7 @@
         return this;
     };
     Init.prototype.count = function(callBack){
+        if( this.hadAdd!==true ) return;
         this.ul = document.querySelectorAll('ul.nav_list');
         this.li = document.getElementById('filterTip') || document.createElement('li');
         this.li.id = "filterTip";
@@ -123,13 +125,14 @@
         return this;
     };
     handler(document).bind("DOMContentLoaded",function(){
-       init().filter().count();
-       var obElement = document.querySelector("#contet_wrap") ? document.querySelector("#contet_wrap") : document.querySelector("#j_p_postlist");
-        handler(obElement).ob({
-            "childList":true,
-            "subtree":true
-        },function(){
-            init().filter().count();
-        });
+       init().filter().count(function(){
+            var obElement = document.querySelector("#contet_wrap") ? document.querySelector("#contet_wrap") : document.querySelector("#j_p_postlist");
+            handler(obElement).ob({
+                "childList":true,
+                "subtree":true
+            },function(){
+                init().filter().count();
+            });
+       });
     });
 })(document);
