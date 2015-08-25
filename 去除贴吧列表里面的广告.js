@@ -2,7 +2,7 @@
 // @name    去除贴吧列表里面的广告
 // @author  burningall
 // @description 去除贴吧掺夹在【帖子列表】【回复列表】里的广告
-// @version     2015.8.25.2
+// @version     2015.8.25.3
 // @grant        none
 // @run-at      document-start
 // @include         http://tieba.baidu.com/*
@@ -76,7 +76,7 @@
         return new Init();
     }
     function Init() {
-        this.adlistSelector = '[data-daid]:not([filted]),#thread_list>li:not([class~=j_thread_list]):not(.thread_top_list_folder):not([filted]),#j_p_postlist>div:not([data-field]):not([filted])';
+        this.adlistSelector = '#thread_list *[data-daid],#j_p_postlist *[data-daid],#thread_list>li:not([class*="list"]):not([data-field]),.p_postlist>div:not(.p_postlist):not([class*="post"]):not([data-field])';
         this.keywordSelector = '#j_p_postlist a[data-swapword]:not([filted]),#j_p_postlist a.ps_cb:not([filted])';
         this.adlist = document.querySelectorAll(this.adlistSelector);
         this.keyword = document.querySelectorAll(this.keywordSelector);
@@ -85,17 +85,21 @@
     }
     Init.prototype.filter = function() {
         for (var i = 0; i < this.adlistLength; i++) {
+            if( this.adlist[i].getAttribute("filted") ) continue;
             this.adlist[i].style.cssText = "display: none !important;";
             this.adlist[i].setAttribute("filted","true");
+            console.log( this.adlist[i] );
             // this.adlist[i].remove(this);
             count.adlist++;
         }
         for (var j = 0; j < this.keywordLength; j++) {
+            if( this.keyword[j].getAttribute("filted") ) continue;
             this.keyword[j].setAttribute("filted","true");
             this.keyword[j].removeAttribute('data-swapword');
             this.keyword[j].removeAttribute('class');
             this.keyword[j].removeAttribute('href');
             this.keyword[j].style.color = '#333';
+            console.log( this.keyword[j] );
             handler(this.keyword[j]).bind("click mouseover", function() {
                 return false;
             });
@@ -120,7 +124,7 @@
     };
     handler(document).bind("DOMContentLoaded",function(){
        init().filter().count();
-       var obElement = document.querySelector("#content") ? document.querySelector("#content") : document.querySelector("#j_p_postlist");
+       var obElement = document.querySelector("#contet_wrap") ? document.querySelector("#contet_wrap") : document.querySelector("#j_p_postlist");
         handler(obElement).ob({
             "childList":true,
             "subtree":true
