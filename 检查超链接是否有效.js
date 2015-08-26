@@ -89,8 +89,6 @@ function check(urlLink,a,secFn,failFn){
 	});
 }
 
-
-//数组拆分
 function slice(array){
 	// if( array.length<10 ){
 	// 	return array;
@@ -119,6 +117,17 @@ function slice(array){
 	return arr;
 }
 
+function linkIsAvailable(a){
+	var match = /登陆|退出|login|logout/img,
+		href = a.href,
+		html = a.innerHTML,
+		text = a.innerText || a.textContent;
+	if( match.test(href) || match.test(html) || match.test(text) || a.getElementsByTagName('img').length>0 ){
+		return false;
+	}
+	return true;
+}
+
 function init(){
 	/**
 	 * 不考虑：
@@ -131,9 +140,7 @@ function init(){
 	var a;
 	for(var i=0;i<link.length;i++){
 		a = link[i];
-		if(a.getElementsByTagName('img').length>0 || a.innerHTML =="登陆" || a.innerHTML =="退出" || a.innerText =="login" || a.innerText =="logout" || a.textContent =="login" || a.textContent =="logout" ){
-			continue;
-		}
+		if( linkIsAvailable(a)===false ) continue;
 		if( visible(a) && a.href!=="" ){
 			inViewPort.push(a);
 		}
@@ -199,7 +206,7 @@ addEvent(document,'mouseover',function(e){
 	var target = e.target || e.srcElement;
 	var a = target;
 	if( a.tagName == "A" && config.rules.test(a.href) ){
-		if( a.getElementsByTagName('img').length>0 || a.getAttribute('visited')==="true" || a.innerHTML =="登陆" || a.innerHTML =="退出" || a.innerText =="login" || a.innerText =="logout" || a.textContent =="login" || a.textContent =="logout" ){
+		if( linkIsAvailable(a)===false ){
 			return;
 		}
 		check(a.href,a,function(a){
