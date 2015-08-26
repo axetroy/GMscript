@@ -2,7 +2,8 @@
 // @name    去百度搜索置顶推广
 // @author  burningall
 // @description 去除插入在百度搜索结果头部、尾部的推广链接。
-// @version     2015.8.22
+// @version     2015.8.26
+// @grant        none
 // @include     *www.baidu.com*
 // @supportURL      http://www.burningall.com
 // @run-at      document-start
