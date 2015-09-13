@@ -201,7 +201,7 @@
               currentAtag[j].href = href;
               currentAtag[j].setAttribute('transcodedAll','true');
               currentAtag[j].setAttribute('transcoded','true');
-              currentAtag[j].style.background = 'red';
+              // currentAtag[j].style.background = 'red';
             }
           }
         }
