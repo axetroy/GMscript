@@ -2,7 +2,7 @@
 // @name    remove the jump link in BAIDU
 // @author  burningall
 // @description 去除百度搜索跳转链接
-// @version     2015.9.14
+// @version     2015.9.22
 // @include     *www.baidu.com*
 // @grant       GM_setValue
 // @grant       GM_getValue
