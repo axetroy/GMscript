@@ -16,10 +16,10 @@
 // @contributionURL troy450409405@gmail.com|alipay.com
 // @namespace https://greasyfork.org/zh-CN/users/3400-axetroy
 // ==/UserScript==
-(function(win,doc) {
+(function(win,doc,undefined) {
   //=====配置参数======
   var config = {
-  	// 需要跳转的链接
+    // 需要跳转的链接
     macthRules: 'a[href*="www.baidu.com/link?url"]:not([transcoding]):not([transcoded]):not([transcodedAll]):not(.m)',
     // 请求失败，需要再次请求的链接
     reloadRules: 'a[transcoded*="false"]',
@@ -30,16 +30,46 @@
     // 混合请求，默认开启
     mixRequireMod:true
   };
-  //匹配正则
-  var regRules = {
-  	// 判断是否为跳转链接
-    isJumpLink: /www.baidu.com\/link\?url=/ig,
-    // 对请求返回的数据进行切割
-    sliceResponse: {
-      step1: /.*window\.location\.replace\(\"(.*)\"\).*$/img,
-      step2: /^(.*)(<noscript>.*<\/noscript>$)/img
-    }
-  };
+  // CSS3动画
+  var styleStr = 'a[transcoded]{position:relative}'+
+                 // 请求失败 
+                 'a[transcoded*="false"]:before{background:rgba(197,31,32,0.5)}'+
+                 // 请求成功
+                 'a[transcoded*="true"]:before{background:rgba(43,138,23,0.5)}'+
+                 // 公共样式
+                 'a[transcoded]:before{'+
+                                      'content:"";'+
+                                      'position:absolute;'+
+                                      'width:0;'+
+                                      'height:100%;'+
+                                      'line-height:100%;'+
+                                      'display:inline-block;'+
+                                      'animation:slide 1s ease-in-out .2s backwards;'+
+                                      '-webkit-animation:slide 1s ease-in-out .2s backwards;'+
+                                      '-moz-animation:slide 1s ease-in-out .2s backwards;'+
+                                      '-o-animation:slide 1s ease-in-out .2s backwards;'+
+                                      '-ms-animation:slide 1s ease-in-out .2s backwards}'+
+                  // 动画
+                  '@keyframes slide{'+
+                                      '0%{width:0}'+
+                                      '80%{width:100%}'+
+                                      '100%{width:0}}'+
+                  '@-webkit-keyframes slide{'+
+                                      '0%{width:0}'+
+                                      '80%{width:100%}'+
+                                      '100%{width:0}}'+
+                  '@-moz-keyframes slide{'+
+                                      '0%{width:0}'+
+                                      '80%{width:100%}'+
+                                      '100%{width:0}}'+
+                  '@-o-keyframes slide{'+
+                                      '0%{width:0}'+
+                                      '80%{width:100%}'+
+                                      '100%{width:0}}'+
+                  '@-ms-keyframes slide{'+
+                                      '0%{width:0}'+
+                                      '80%{width:100%}'+
+                                      '100%{width:0}}';
   //======事件对象=======
   function handler(obj) {
     return new Event(obj);
@@ -72,11 +102,14 @@
   // 事件绑定
   Event.prototype.bind = function(type, fn) {
     var obj = this.element;
+    // 传入一个参数
     if (arguments.length == 1) {
       for (var attr in type) {
         this.addEvent(attr, type[attr]);
       }
-    } else if (arguments.length == 2) {
+    }
+    // 传入json
+    else if (arguments.length == 2) {
       var events = type.split(' ');
       var j = 0;
       while (j < events.length) {
@@ -99,18 +132,16 @@
     return this;
   };
   //======公共函数=======
-  // 获取文本
+  // 获取DOM节点的文本
   function getText(obj){
-    if( obj.innerText ){
-      return obj.innerText;
-    }else{
-      return obj.textContent;
-    }
+    return obj.innerText ? obj.innerText : obj.textContent;
   }
   // AJAX
   function ajax(url,json,a){
+    // this>>>a
     a = a ? a : win;
-    if( typeof json.beforeFn !=="undefined"){
+    if( json.beforeFn ){
+      // 如果返回值为false，则不请求
       if( json.beforeFn.call(a,url)===false ) return;//this>>>a
     }
     GM_xmlhttpRequest({
@@ -120,13 +151,9 @@
         if (response.readyState == 4) {
           var status = response.status + '';
           if (status.charAt(0) == "4" || status.charAt(0) == "5") { //4XX，5XX错误
-            if( typeof json.failFn !=="undefined"){
-              json.failFn.call(a,status,url);//this>>>a
-            }
+            if( json.failFn ) json.failFn.call(a,status,url);//this>>>a
           } else {
-            if( typeof json.successFn !=="undefined"){
-              json.successFn.call(a,response.responseText,url);//this>>>a
-            }
+            if( json.successFn ) json.successFn.call(a,response.responseText,url);//this>>>a
           }
         }
       }
@@ -138,8 +165,8 @@
   }
   // 初始化
   function Init(agm) {
-  	// 添加动画
-    this.addStyle();
+    // 添加动画
+    this.addStyle(styleStr);
     // 不传参数则返回
     if (!agm) return this;
     // 获取到要跳转的A链接
@@ -149,25 +176,23 @@
     for (var j = 0,leng = jumpLinks.length; j < leng; j++) {
       this.a = jumpLinks[j];
       // 在可视区域内
-      if (this.visible() === true) {
-        this.inViewPort.push(jumpLinks[j]);
-      }
+      if ( this.visible() ) this.inViewPort.push(jumpLinks[j]);
     }
     // 删除百度搜索追踪
     var trackDiv = doc.querySelectorAll('#content_left *[data-click]');
     for( var i=0,len=trackDiv.length;i<len;i++ ){
-    	trackDiv[i].removeAttribute('data-click');
+      trackDiv[i].removeAttribute('data-click');
     }
     return this;
   }
   // 全局请求
   Init.prototype.all = function(callBack){
-  	// 搜索框的关键字
+    // 搜索框的关键字
     var searchWord = doc.getElementById('kw').value,
     // 构建新的请求url，把tn=baidulocal替换成tn=baidulocal
       url = win.top.location.href.replace('https', 'http').replace(/(\&)(tn=\w+)(\&)/img, '$1' + 'tn=baidulocal' + '$3').replace(/(\&)(wd=\w+)(\&)/img, '$1' + 'wd='+ searchWord + '$3');
     ajax(url,{
-    	// 请求发出前
+      // 请求发出前
       "beforeFn":function(url){
         config.transcodingAll=true;
       },
@@ -184,21 +209,19 @@
         // 请求得到的所有A标签
         var requireAtag = html.querySelectorAll('.f>a'),
         // 存放信息的哈希表
-        	info = {};//href：innerText
+          info = {};//href：innerText
         // 存放href和innerText到info中
         for (var i = 0,length = requireAtag.length; i < length; i++) {
-          if (typeof(info[requireAtag[i].href]) == "undefined") {
-            info[ requireAtag[i].href ] = getText( requireAtag[i] );
-          }
+          if ( info[requireAtag[i].href] === undefined) info[ requireAtag[i].href ] = getText( requireAtag[i] );
         }
         // 当前页的需要跳转的A标签
         var currentAtag = doc.querySelectorAll('.t>a:not(.OP_LOG_LINK):not([transcoded]):not([transcodedAll])');
         // 循环匹配，替换url
-        for (var href in info) {
-          for (var j = 0,length = currentAtag.length; j < length; j++) {
-          	// 如果符合条件
-            if ( info[href].replace(/\s*/img, '') == getText( currentAtag[j] ).replace(/\s*/img,'') ) {
-              currentAtag[j].href = href;
+        for (var trueLink in info) {
+          for (var j = 0,len = currentAtag.length; j < len; j++) {
+            // 如果符合条件
+            if ( info[trueLink].replace(/\s*/img, '') == getText( currentAtag[j] ).replace(/\s*/img,'') ) {
+              currentAtag[j].href = trueLink;
               currentAtag[j].setAttribute('transcodedAll','true');
               currentAtag[j].setAttribute('transcoded','true');
               // currentAtag[j].style.background = 'red';
@@ -212,7 +235,7 @@
     });
   };
   // 关闭混合请求
-  if( config.mixRequireMod===false ){
+  if( !config.mixRequireMod ){
     Init.prototype.all = function(callBack){
       if(callBack) callBack();
       return;
@@ -230,7 +253,7 @@
       if( this.a.getAttribute("transcodedAll") ) continue;
       // url构建：url必须要加上"&wd=&eqid=0"，否则出错
       ajax(this.a.href.replace("http", "https") + "&wd=&eqid=0",{
-      	// 请求前
+        // 请求前
         "beforeFn":function(url){
           this.setAttribute("transcoding", "true");
         },
@@ -241,7 +264,7 @@
         },
         // 请求成功
         "successFn":function(responseStr,url){
-          var trueLink = responseStr.replace(regRules.sliceResponse.step1, "$1").replace(regRules.sliceResponse.step2, '$1');
+          var trueLink = responseStr.match(/\(\"\S+\"\)/img)[0].replace(/^[\(\"]*|[\)\"]*$/img,"");
           this.href = trueLink;
           this.removeAttribute("transcoding");
           this.setAttribute("transcoded", "true");
@@ -251,16 +274,15 @@
     return this;
   };
   // 添加动画
-  Init.prototype.addStyle = function() {
-  	// 如果已存在则返回
-    if (config.isAnimate === false || doc.getElementById('transcodedStyle')) return;
-    this.cssString = 'a[transcoded]{position:relative}a[transcoded*="false"]:before{background:rgba(197,31,32,0.5)}a[transcoded*="true"]:before{background:rgba(43,138,23,0.5)}a[transcoded]:before{content:"";position:absolute;width:0;height:100%;line-height:100%;display:inline-block;animation:slide 1s ease-in-out .2s backwards;-webkit-animation:slide 1s ease-in-out .2s backwards;-moz-animation:slide 1s ease-in-out .2s backwards;-o-animation:slide 1s ease-in-out .2s backwards;-ms-animation:slide 1s ease-in-out .2s backwards}@keyframes slide{0%{width:0}80%{width:100%}100%{width:0}}@-webkit-keyframes slide{0%{width:0}80%{width:100%}100%{width:0}}@-moz-keyframes slide{0%{width:0}80%{width:100%}100%{width:0}}@-o-keyframes slide{0%{width:0}80%{width:100%}100%{width:0}}@-ms-keyframes slide{0%{width:0}80%{width:100%}100%{width:0}}';
-    this.css = doc.createTextNode(this.cssString);
-    this.style = doc.createElement('style');
-    this.style.id = "transcodedStyle";
-    this.style.type = "text/css";
-    this.style.appendChild(this.css);
-    doc.head.appendChild(this.style);
+  Init.prototype.addStyle = function(styleStr) {
+    // 如果已存在则返回
+    if ( !config.isAnimate || doc.getElementById('transcodedStyle')) return;
+    var textNode = doc.createTextNode(styleStr);
+    var style = doc.createElement('style');
+    style.id = "transcodedStyle";
+    style.type = "text/css";
+    style.appendChild(textNode);
+    doc.head.appendChild(style);
   };
   // 检查是否在可视区域内
   Init.prototype.visible = function() {
@@ -269,16 +291,12 @@
       w = doc.documentElement.clientWidth || doc.body.clientWidth;
       h = doc.documentElement.clientHeight || doc.body.clientHeight;
       var inViewPort = pos.top > h || pos.bottom < 0 || pos.left > w || pos.right < 0;
-      if (inViewPort === true) {
-        return false;
-      } else {
-        return true;
-      }
+      return inViewPort ? false : true;
     }
   };
   //======执行=======
   handler(doc).bind({
-  	// 页面加载完毕则开始执行
+    // 页面加载完毕则开始执行
     "DOMContentLoaded": function() {
       if( config.transcodingAll===false ){
         // 全局请求
@@ -295,7 +313,7 @@
             "childList":true,
             "subtree":true
           },function(){
-            if( config.transcodingAll===false ){
+            if( !config.transcodingAll ){
               init().all(function() {
                 init(config.macthRules).onebyone();
               });
@@ -307,14 +325,14 @@
     // 鼠标移入跳转链接则请求
     "mouseover": function(e) {
       var a = e.target;
-      if (a.tagName == "A" && regRules.isJumpLink.test(a.href) && a.getAttribute('transcoded') !== "true") {
+      if (a.tagName == "A" && /www.baidu.com\/link\?url=/img.test(a.href) && a.getAttribute('transcoded') !== "true") {
         var href = a.href.replace("http", "https") + "&wd=&eqid=0";
         ajax(href,{
           "beforeFn":function(url){
             this.setAttribute("transcoding", "true");
           },
           "successFn":function(responseStr,url){
-            var trueLink = responseStr.replace(regRules.sliceResponse.step1, "$1").replace(regRules.sliceResponse.step2, '$1');
+            var trueLink = responseStr.match(/\(\"\S+\"\)/img)[0].replace(/^[\(\"]*|[\)\"]*$/img,"");
             this.href = trueLink;
             this.removeAttribute("transcoding");
             this.setAttribute("transcoded", "true");
@@ -330,7 +348,6 @@
     // 再次请求失败的url
     init(config.reloadRules).onebyone();
     // 给全局请求添加动画
-    var a = doc.querySelectorAll('a[transcodedAll]');
     var inViewPortEle = init('a[transcodedAll]').inViewPort;
     for( var i=0,length = inViewPortEle.length;i<length;i++ ){
       inViewPortEle[i].setAttribute("transcoded","true");
@@ -338,11 +355,11 @@
   });
   //======注册菜单====
   function turnAnimate(){
-    if( win.confirm("打开请求动画\n【确定】>>>打开动画\n【取消】>>>关闭动画\n\n当前状态:"+GM_getValue("isAnimate",true)+"\n\n刷新页面生效")===true ){
+    if( win.confirm("打开请求动画\n【确定】>>>打开动画\n【取消】>>>关闭动画\n\n当前状态:"+GM_getValue("isAnimate",true)+"\n\n刷新页面生效") ){
       GM_setValue("isAnimate",true);
     }else{
       GM_setValue("isAnimate",false);
     }
   }
   GM_registerMenuCommand("请求动画开关",turnAnimate);
-})(window,document);
+})(window,document,undefined);
