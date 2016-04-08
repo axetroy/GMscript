@@ -1,136 +1,187 @@
 // ==UserScript==
-// @name    去百度搜索置顶推广
-// @author  burningall
-// @description 去除插入在百度搜索结果头部、尾部的推广链接。
-// @version     2015.8.26
-// @grant        none
-// @include     *www.baidu.com*
-// @supportURL      http://www.burningall.com
-// @run-at      document-start
-// @contributionURL troy450409405@gmail.com|alipay.com
-// @namespace https://greasyfork.org/zh-CN/users/3400-axetroy
+// @name              去百度搜索置顶推广
+// @author            axetroy
+// @description       去除插入在百度搜索结果头部、尾部的推广链接。
+// @version           2016.4.8
+// @grant             none
+// @include           *www.baidu.com*
+// @connect           *
+// @supportURL        http://www.burningall.com
+// @run-at            document-start
+// @contributionURL   troy450409405@gmail.com|alipay.com
+// @namespace         https://greasyfork.org/zh-CN/users/3400-axetroy
 // ==/UserScript==
 
-(function(document) {
-    function handler(obj) {
-        return new Event(obj);
-    }
-    function Event(obj) {
-        this.element = obj;
-        return this;
-    }
-    Event.prototype.addEvent = function(type, fn) {
-        var obj = this.element;
-        var ev;
-        return obj.addEventListener ?
-            obj.addEventListener(type, function(e) {
-                ev = window.event ? window.event : (e ? e : null);
-                ev.target = ev.target || ev.srcElement;
-                if (fn.call(obj, ev) === false) {
-                    ev.cancelBubble = true; //阻止冒泡
-                    ev.preventDefault(); //chrome，firefox下阻止默认事件
-                }
-            }, false) :
-            obj.attachEvent('on' + type, function(e) {
-                ev = window.event ? window.event : (e ? e : null);
-                ev.target = ev.target || ev.srcElement;
-                if (fn.call(obj, ev) === false) {
-                    ev.cancelBubble = true; //阻止冒泡
-                    return false; //阻止默认事件，针对IE8
-                }
-            });
-    };
-    Event.prototype.bind = function(type, fn) {
-        var obj = this.element;
-        if (arguments.length == 1) {
-            for (var attr in type) {
-                this.addEvent(attr, type[attr]);
-            }
-        } else if (arguments.length == 2) {
-            var events = type.split(' ');
-            var eventsLength = events.length;
-            var j = 0;
-            while (j < eventsLength) {
-                this.addEvent(events[j], fn);
-                j++;
-            }
-        }
-        return this;
-    };
-    Event.prototype.ob = function(config, fn) {
-        var target = this.element;
-        var MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver,
-            observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    fn.call(target);
-                });
-            });
-        observer.observe(target, config);
-        return this;
-    };
+/* jshint ignore:start */
 
-    function init() {
-        return new RemoveAds();
+;(function (window) {
+
+  'use strict';
+
+  var ES6Support = true;
+
+  try {
+    class test {
+
     }
-    function RemoveAds() {
-        this.ads = document.querySelectorAll('#content_left>div:not([class*=result]):not([class*=container]):not(.leftBlock):not([adsFilted]),#content_left>table:not(.result):not([adsFilted])');
-        this.length = this.ads.length;
-        var a = {};
-        var temps = [];
-        for( var i=0;i<this.length;i++){
-            var v = this.ads[i];
-            if( typeof a[v] =="undefined" ){
-                a[v] = 1;
-                temps.push( v );
-            }
-        }
-        this.ads = temps;
-        this.length =this.ads.length;
+  } catch (e) {
+    /**
+     * 促进大家升级浏览器，拯救前端，就是拯救我自己
+     */
+    alert('你的浏览器不支持ECMA6，去百度搜索置顶推广将失效，请升级浏览器和脚本管理器');
+    ES6Support = false;
+  }
+
+  if (!ES6Support) return;
+
+  let noop = function () {
+  };
+
+  class jqLite {
+    constructor(selectors = '') {
+      this.selectors = selectors;
+      let elements = typeof selectors === 'string' ?
+        document.querySelectorAll(selectors) :
+        selectors.length ? selectors : [selectors];
+      for (let i = 0; i < elements.length; i++) {
+        this[i] = elements[i];
+      }
+      this.length = elements.length;
     }
-    var count = {
-        "num":0,
-        "hadChange":false
-    };
-    RemoveAds.prototype.filter = function(){
-        for(var i=0;i<this.length;i++ ){
-            this.ads[i].style.cssText = "display:none !important";
-            this.ads[i].setAttribute("adsFilted","");
-            console.log( this.ads[i] );
-            count.num++;
-        }
-        count.hadChange = this.length>0 ? true : false;
-        return this;
-    };
-    RemoveAds.prototype.showTip = function() {
-        if( count.hadChange !== true ) return this;
-        var insertPos = document.querySelector('.nums');
-        if (insertPos) {
-            var span = document.querySelector('span.adTip') || document.createElement('span'),
-                spanTextStr = "……累计过滤" + count.num + "条推广链接";
-            if (this.tipWord) {
-                if( span.innerText ){
-                    span.innerText = spanTextStr;
-                }else{
-                    span.textContent = spanTextStr;
-                }
-            } else {
-                if( span.innerText ){
-                    span.innerText = spanTextStr;
-                }else{
-                    span.textContent = spanTextStr;
-                }
-                span.className = "adTip";
-                insertPos.appendChild(span);
+
+    each(fn = noop) {
+      for (let i = 0; i < this.length; i++) {
+        fn.call(this, this[i], i);
+      }
+      return this;
+    }
+
+    bind(types = '', fn = noop) {
+      this.each((ele)=> {
+        if (Object.prototype.toString.call(types) === '[object String]') {
+          types.trim().split(/\s{1,}/).forEach((type)=> {
+            ele.addEventListener(type, (e) => {
+              e = window.event ? window.event : (e ? e : null);
+              let target = e.target || e.srcElement;
+              if (fn.call(target, e) === false) {
+                e.returnValue = true;
+                e.cancelBubble = true;
+                e.preventDefault && e.preventDefault();
+                e.stopPropagation && e.stopPropagation();
+                return false;
+              }
+            }, false);
+
+          });
+        } else {
+          ele.addEventListener(type, (e) => {
+            e = window.event ? window.event : (e ? e : null);
+            let target = e.target || e.srcElement;
+            if (fn.call(target, e) === false) {
+              e.returnValue = true;
+              e.cancelBubble = true;
+              e.preventDefault && e.preventDefault();
+              e.stopPropagation && e.stopPropagation();
+              return false;
             }
+          }, false);
         }
-        count.hadChange = false;
-    };
-    handler(document).bind("DOMContentLoaded",function(){
-        handler(this).ob({
-            "childList":true,
-            "subtree":true
-        },function(){
-            init().filter().showTip();
+
+      });
+    }
+
+    observe(config, fn = noop) {
+      this.each((ele) => {
+        let MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
+        let observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            fn.call(this, mutation.target, mutation.addedNodes, mutation.removedNodes);
+          });
         });
+        observer.observe(ele, config);
+      });
+      return this;
+    }
+
+  }
+
+  let $ = (selectors) => {
+    return new jqLite(selectors);
+  };
+
+  const defaultRules = `
+    #content_left>div
+    :not([class*=result])
+    :not([class*=container])
+    :not(.leftBlock)
+    :not(#rs_top_new)
+    :not([filtered])
+    ,
+    #content_left>table
+    :not(.result)
+    :not([filtered])
+    ,
+    #content_right>table td
+    div#ec_im_container
+    ,
+    div.s-news-list-wrapper>div
+    :not([data-relatewords*="1"])
+  `.trim().replace(/\n/img, '').replace(/\s{1,}([^a-zA-Z])/g, '$1');
+
+  let adsCount = 0;
+
+  class main {
+
+    constructor(rules = defaultRules) {
+      this.ads = $(rules);
+      this.length = this.ads.length;
+    }
+
+    filter() {
+      this.ads.each((ele, i)=> {
+        ele.style.cssText = `
+          display:none !important;
+          visibility:hidden !important;
+          width:0 !important;
+          height:0 !important;
+          overflow:hidden !important;
+          // background-color:red !important;
+          // border:1px solid red;
+        `;
+        ele.setAttribute('filtered', '');
+        adsCount++;
+      });
+      return this;
+    }
+
+    turn() {
+      $('#content_left input[type=checkbox]:not(filtered)').each(function (ele) {
+        ele.checked = false;
+        ele.setAttribute('filtered', '');
+      });
+      return this;
+    }
+
+  }
+
+  let $interval = window.setInterval(function () {
+    new main().filter().turn();
+  }, 50);
+
+  $(window.document).bind('DOMContentLoaded', () => {
+    new main().filter().turn();
+    window.clearInterval($interval);
+    $(window.document).observe({
+      "childList": true,
+      "subtree": true
+    }, () => {
+      new main().filter().turn();
     });
-})(document);
+
+  });
+
+  console.info('去广告启动...');
+
+})(typeof window === 'undefined' ? this : window);
+
+/* jshint ignore:end */
