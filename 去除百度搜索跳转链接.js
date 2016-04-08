@@ -2,7 +2,7 @@
 // @name              remove the jump link in BAIDU
 // @author            axetroy
 // @description       去除百度搜索跳转链接
-// @version           2016.4.9.2
+// @version           2016.4.9.3
 // @grant             GM_xmlhttpRequest
 // @include           *www.baidu.com*
 // @connect           tags
@@ -133,25 +133,44 @@
 
   let $cache = {};
 
+  let $timeout = (fn = noop, delay = 0) => {
+    return window.setTimeout(fn, delay);
+  };
+
+  $timeout.cancel = function (timerId) {
+    window.clearTimeout(timerId);
+  };
+
   let $ajax = (url, aEle) => {
     var deferred = $q.defer();
 
     // if in BAIDU home page
     if (new RegExp(`${window.location.host}\/?$`, 'im').test(url)) {
-      deferred.resolve({aEle, url, response: ''});
-      return deferred.promise;
+      $timeout(function () {
+        deferred.resolve({aEle, url, response: ''});
+        return deferred.promise;
+      });
     }
 
     // if has cache
     if ($cache[url]) {
-      deferred.resolve({aEle, url, response: $cache[url]});
-      return deferred.promise;
+      $timeout(function () {
+        deferred.resolve({aEle, url, response: $cache[url]});
+        return deferred.promise;
+      });
     }
 
     // not match the url
     if (!/w{3}\.baidu\.com\/link\?url=/im.test(url) && !/w{3}\.baidu\.com\/s/.test(url)) {
-      deferred.resolve({aEle, url, response: {finalUrl: url}});
-      return deferred.promise;
+      $timeout(function () {
+        deferred.resolve({aEle, url, response: {finalUrl: url}});
+        return deferred.promise;
+      });
+    }
+
+    // make the protocol agree
+    if (!new RegExp(`^${window.location.protocol}`).test(url)) {
+      url = url.replace(/^(http|https):/im, window.location.protocol);
     }
 
     if (config.debug) console.info(`ajax:${url}`);
