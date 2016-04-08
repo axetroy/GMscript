@@ -2,7 +2,7 @@
 // @name              remove the jump link in BAIDU
 // @author            axetroy
 // @description       去除百度搜索跳转链接
-// @version           2016.4.9.3
+// @version           2016.4.9.4
 // @grant             GM_xmlhttpRequest
 // @include           *www.baidu.com*
 // @connect           tags
@@ -180,9 +180,11 @@
     GM_xmlhttpRequest({
       method: "GET",
       url: url,
+      timeout: 5000,
+      anonymous: true,
       onreadystatechange: function (response) {
         if (response.readyState !== 4) return;
-        var data = {aEle, url, response};
+        let data = {aEle, url, response};
         $cache[url] = response;
         if (/^(2|3)/.test(response.status)) {
           aEle && aEle.setAttribute('decoded', 'true');
@@ -191,6 +193,16 @@
           aEle && aEle.setAttribute('decoded', 'false');
           deferred.reject(data);
         }
+      },
+      ontimeout: (response)=> {
+        let data = {aEle, url, response};
+        aEle && aEle.setAttribute('decoded', 'false');
+        deferred.reject(data);
+      },
+      onerror: (response)=> {
+        let data = {aEle, url, response};
+        aEle && aEle.setAttribute('decoded', 'false');
+        deferred.reject(data);
       }
     });
 
