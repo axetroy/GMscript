@@ -2,18 +2,21 @@
 // @name              remove the jump link in BAIDU
 // @author            axetroy
 // @description       去除百度搜索跳转链接
-// @version           2016.4.9
+// @version           2016.4.9.2
 // @grant             GM_xmlhttpRequest
 // @include           *www.baidu.com*
+// @connect           tags
 // @connect           *
+// @compatible        chrome  完美运行
+// @compatible        firefox  完美运行
 // @supportURL        http://www.burningall.com
 // @run-at            document-start
 // @contributionURL   troy450409405@gmail.com|alipay.com
 // @namespace         https://greasyfork.org/zh-CN/users/3400-axetroy
+// @license           The MIT License (MIT); http://opensource.org/licenses/MIT
 // ==/UserScript==
 
 /* jshint ignore:start */
-
 ;(function (window, document) {
 
   'use strict';
@@ -133,14 +136,21 @@
   let $ajax = (url, aEle) => {
     var deferred = $q.defer();
 
-    // 百度首页不请求
+    // if in BAIDU home page
     if (new RegExp(`${window.location.host}\/?$`, 'im').test(url)) {
-      deferred.resolve();
+      deferred.resolve({aEle, url, response: ''});
       return deferred.promise;
     }
 
+    // if has cache
     if ($cache[url]) {
       deferred.resolve({aEle, url, response: $cache[url]});
+      return deferred.promise;
+    }
+
+    // not match the url
+    if (!/w{3}\.baidu\.com\/link\?url=/im.test(url) && !/w{3}\.baidu\.com\/s/.test(url)) {
+      deferred.resolve({aEle, url, response: {finalUrl: url}});
       return deferred.promise;
     }
 
@@ -222,7 +232,7 @@
         .then(function (data) {
           isDecodingAll = false;
 
-          if (!data) return;
+          if (!data.response) return;
           let response = data.response.responseText;
           let html = document.createElement('html');
           html.innerHTML = response;
@@ -260,6 +270,8 @@
     }
 
   }
+
+  console.info('去跳转启动...');
 
   $(document).bind('DOMContentLoaded', ()=> {
 
@@ -306,4 +318,5 @@
 })(window, document);
 
 /* jshint ignore:end */
+
 
