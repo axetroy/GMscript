@@ -63,7 +63,10 @@
       #aside *[data-daid],
       #aside>div[class*="clearfix"],
       #aside DIV[id$="ad"],
-      #aside #encourage_entry,.my_app,.j_encourage_entry
+      #aside #encourage_entry,
+      .my_app,.j_encourage_entry，
+      .right_section>div.u9_aside,
+      .right_section>div.clearfix
       ,
       #pb_adbanner,#pb_adbanner *[data-daid]
       ,
