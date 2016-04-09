@@ -1,138 +1,267 @@
 // ==UserScript==
-// @name    去除贴吧列表里面的广告
-// @author  burningall
-// @description 去除贴吧掺夹在【帖子列表】【回复列表】里的广告
-// @version     2015.8.25.4
-// @grant        none
-// @run-at      document-start
-// @include         http://tieba.baidu.com/*
-// @supportURL      http://www.burningall.com
-// @contributionURL troy450409405@gmail.com|alipay.com
-// @namespace https://greasyfork.org/zh-CN/users/3400-axetroy
+// @name              去除贴吧列表里面的广告
+// @author            axetroy
+// @description       去除贴吧掺夹在[帖子列表][回复列表]里的广告
+// @version           2016.4.9
+// @include           http://tieba.baidu.com/*
+// @connect           tags
+// @connect           *
+// @compatible        chrome  完美运行
+// @compatible        firefox  完美运行
+// @supportURL        http://www.burningall.com
+// @run-at            document-start
+// @contributionURL   troy450409405@gmail.com|alipay.com
+// @namespace         https://greasyfork.org/zh-CN/users/3400-axetroy
+// @license           The MIT License (MIT); http://opensource.org/licenses/MIT
 // ==/UserScript==
 
-(function(document) {
-    function handler(obj) {
-        return new Event(obj);
-    }
-    function Event(obj) {
-        this.element = obj;
-        return this;
-    }
-    Event.prototype.addEvent = function(type, fn) {
-        var obj = this.element;
-        var ev;
-        return obj.addEventListener ?
-            obj.addEventListener(type, function(e) {
-                ev = window.event ? window.event : (e ? e : null);
-                ev.target = ev.target || ev.srcElement;
-                if (fn.call(obj, ev) === false) {
-                    ev.cancelBubble = true;
-                    ev.preventDefault();
-                }
-            }, false) :
-            obj.attachEvent('on' + type, function(e) {
-                ev = window.event ? window.event : (e ? e : null);
-                ev.target = ev.target || ev.srcElement;
-                if (fn.call(obj, ev) === false) {
-                    ev.cancelBubble = true;
-                    return false;
-                }
-            });
+/* jshint ignore:start */
+;(function (window, document) {
+
+  'use strict';
+
+  var ES6Support = true;
+
+  try {
+    let test_let = true;
+    const test_const = true;
+    var test_tpl_str = `233`;
+    var test_arrow_fn = (a = '233') => {
     };
-    Event.prototype.bind = function(type, fn) {
-        var obj = this.element;
-        if (arguments.length == 1) {
-            for (var attr in type) {
-                this.addEvent(attr, type[attr]);
+    class test_class {
+
+    }
+  } catch (e) {
+    /**
+     * 促进大家升级浏览器，拯救前端，就是拯救我自己
+     */
+    alert('你的浏览器不支持ECMA6，去除知乎跳转将失效，请升级浏览器和脚本管理器');
+    ES6Support = false;
+  }
+
+  if (!ES6Support) return;
+
+  let config = {
+    // 是否是调试模式
+    debug: false,
+    adRules: `
+      ul#thread_list *[data-daid],
+      ul#thread_list>li:not([data-field]):not(.thread_top_list_folder)
+      ,
+      #j_p_postlist *[data-daid],
+      #j_p_postlist *[data-isautoreply]
+      ,
+      #thread_list>li
+      :not([class*="list"])
+      :not([data-field])
+      ,
+      .p_postlist>div
+      :not(.p_postlist)
+      :not([class*="post"])
+      :not([data-field])
+      ,
+      #aside *[data-daid],
+      #aside>div[class*="clearfix"],
+      #aside DIV[id$="ad"],
+      #aside #encourage_entry,.my_app,.j_encourage_entry
+      ,
+      #pb_adbanner,#pb_adbanner *[data-daid]
+      ,
+      #com_u9_head,
+      .u9_head,
+      div.search_form>div[class*="clearfix"]
+      ,
+      .firework-wrap
+    `.trim().replace(/\n/img, '').replace(/\s{1,}([^a-z\*])/ig, '$1'),
+    keyRules: `
+      #j_p_postlist a[data-swapword]:not([filted]),
+      #j_p_postlist a.ps_cb:not([filted])
+    `.trim().replace(/\n/img, '').replace(/\s{1,}([^a-z\*])/ig, '$1')
+  };
+
+  let noop = function () {
+  };
+
+  class jqLite {
+    constructor(selectors = '') {
+      this.selectors = selectors;
+      let elements = typeof selectors === 'string' ?
+        document.querySelectorAll(selectors) :
+        selectors.length ? selectors : [selectors];
+      for (let i = 0; i < elements.length; i++) {
+        this[i] = elements[i];
+      }
+      this.length = elements.length;
+    }
+
+    each(fn = noop) {
+      for (let i = 0; i < this.length; i++) {
+        fn.call(this, this[i], i);
+      }
+      return this;
+    }
+
+    bind(types = '', fn = noop) {
+      this.each((ele)=> {
+        types.trim().split(/\s{1,}/).forEach((type)=> {
+          ele.addEventListener(type, (e) => {
+            let target = e.target || e.srcElement;
+            if (fn.call(target, e) === false) {
+              e.returnValue = true;
+              e.cancelBubble = true;
+              e.preventDefault && e.preventDefault();
+              e.stopPropagation && e.stopPropagation();
+              return false;
             }
-        } else if (arguments.length == 2) {
-            var events = type.split(' ');
-            var eventsLength = events.length;
-            var j = 0;
-            while (j < eventsLength) {
-                this.addEvent(events[j], fn);
-                j++;
-            }
-        }
-        return this;
-    };
-    Event.prototype.ob = function(config, fn) {
-        var target = this.element;
-        var MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver,
-            observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    fn.call(target);
-                });
-            });
-        observer.observe(target, config);
-        return this;
-    };
-    var count = {
-        "adlist": 0,
-        "keyword": 0
-    };
-    function init() {
-        return new Init();
+          }, false);
+        });
+      });
     }
-    function Init() {
-        this.adlistSelector = '#thread_list *[data-daid],#j_p_postlist *[data-daid],#thread_list>li:not([class*="list"]):not([data-field]),.p_postlist>div:not(.p_postlist):not([class*="post"]):not([data-field])';
-        this.keywordSelector = '#j_p_postlist a[data-swapword]:not([filted]),#j_p_postlist a.ps_cb:not([filted])';
-        this.adlist = document.querySelectorAll(this.adlistSelector);
-        this.keyword = document.querySelectorAll(this.keywordSelector);
-        this.adlistLength =  this.adlist.length;
-        this.keywordLength =  this.keyword.length;
+
+    observe(fn = noop, config = {childList: true, subtree: true}) {
+      this.each((ele) => {
+        let MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
+        let observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            fn.call(this, mutation.target, mutation.addedNodes, mutation.removedNodes);
+          });
+        });
+        observer.observe(ele, config);
+      });
+      return this;
     }
-    Init.prototype.filter = function() {
-        for (var i = 0; i < this.adlistLength; i++) {
-            if( this.adlist[i].getAttribute("filted") ) continue;
-            this.adlist[i].style.cssText = "display: none !important;";
-            this.adlist[i].setAttribute("filted","true");
-            console.log( this.adlist[i] );
-            this.hadAdd = true;
-            count.adlist++;
-        }
-        for (var j = 0; j < this.keywordLength; j++) {
-            if( this.keyword[j].getAttribute("filted") ) continue;
-            this.keyword[j].setAttribute("filted","true");
-            this.keyword[j].removeAttribute('data-swapword');
-            this.keyword[j].removeAttribute('class');
-            this.keyword[j].removeAttribute('href');
-            this.keyword[j].style.color = '#333';
-            this.hadAdd = true;
-            console.log( this.keyword[j] );
-            handler(this.keyword[j]).bind("click mouseover", function() {
-                return false;
-            });
-            count.keyword++;
-        }
-        return this;
+
+    static visible(ele) {
+      let pos = ele.getBoundingClientRect();
+      let w;
+      let h;
+      let inViewPort;
+      if (document.documentElement.getBoundingClientRect) {
+        w = document.documentElement.clientWidth || document.body.clientWidth;
+        h = document.documentElement.clientHeight || document.body.clientHeight;
+        inViewPort = pos.top > h || pos.bottom < 0 || pos.left > w || pos.right < 0;
+        return inViewPort ? false : true;
+      }
+    }
+
+    static debounce(fn, delay) {
+      let timer;
+      return function () {
+        let agm = arguments;
+        window.clearTimeout(timer);
+        timer = window.setTimeout(()=> {
+          fn.apply(this, agm);
+        }, delay);
+      }
+    }
+
+  }
+
+  let $ = (selectors = '') => {
+    return new jqLite(selectors);
+  };
+
+  let $timeout = (fn = noop, delay = 0) => {
+    return window.setTimeout(fn, delay);
+  };
+
+  $timeout.cancel = function (timerId) {
+    window.clearTimeout(timerId);
+  };
+
+  let $interval = (fn, delay) => {
+    let interval = () => {
+      fn.call(this);
+      id = setTimeout(interval, delay);
     };
-    Init.prototype.count = function(callBack){
-        if( this.hadAdd!==true ) return;
-        this.ul = document.querySelectorAll('ul.nav_list');
-        this.li = document.getElementById('filterTip') || document.createElement('li');
-        this.li.id = "filterTip";
-        if( this.li.innerText ){
-            this.li.innerText = "广告帖:" + count.adlist + "关键字:" + count.keyword + "";
-        }else{
-            this.li.textContent = "广告帖:" + count.adlist + "关键字:" + count.keyword + "";
-        }
-        if( !document.getElementById('filterTip') ){
-            this.ul[0].appendChild(this.li);
-        }
-        if (callBack) callBack();
-        return this;
-    };
-    handler(document).bind("DOMContentLoaded",function(){
-       init().filter().count(function(){
-            var obElement = document.querySelector("#contet_wrap") ? document.querySelector("#contet_wrap") : document.querySelector("#j_p_postlist");
-            handler(obElement).ob({
-                "childList":true,
-                "subtree":true
-            },function(){
-                init().filter().count();
-            });
-       });
+
+    let id = setTimeout(interval, delay);
+
+    return function () {
+      window.clearTimeout(id);
+    }
+  };
+
+  $interval.cancel = (timerFunc) => {
+    timerFunc();
+  };
+
+  class main {
+    constructor(agm = '') {
+      if (!agm) return this;
+
+      this.ads = $(agm);
+
+    }
+
+    filter() {
+      this.ads.each((ele)=> {
+        if (ele.$$filtered) return;
+        ele.style.cssText = config.debug ? `
+          border:2px solid red;
+        ` : `
+          display:none !important;
+          visibility:hidden !important;
+          width:0 !important;
+          height:0 !important;
+          overflow:hidden !important;
+        `;
+        ele.$$filtered = true;
+      });
+      return this;
+    }
+
+    keyword() {
+      $(config.keyRules).each(function (aEle) {
+        if (aEle.$$filtered) return;
+        aEle.removeAttribute('data-swapword');
+        aEle.removeAttribute('class');
+        aEle.removeAttribute('href');
+        aEle.style.cssText = config.debug ? `
+          color:#fff !important;
+          background-color:red !important;
+        ` : `
+          color:inherit !important;
+        `;
+        aEle.$$filtered = true;
+      });
+      return this;
+    }
+
+  }
+
+  let loop = $interval(()=> {
+    new main(config.adRules).filter().keyword();
+  }, 50);
+
+  console.info('贴吧去广告启动...');
+
+  $(document).bind('DOMContentLoaded', ()=> {
+
+    $interval.cancel(loop);
+
+    // init
+    new main(config.adRules).filter().keyword();
+
+
+    let observeDebounce = jqLite.debounce((target, addList, removeList) => {
+      if (!addList || !addList.length) return;
+      new main(config.adRules).filter().keyword();
+    }, 200);
+
+    $(document).observe(function (target, addList, removeList) {
+      observeDebounce(target, addList, removeList);
     });
-})(document);
+
+    let scrollDebounce = jqLite.debounce(() => {
+      new main(config.adRules).filter().keyword();
+    }, 200);
+    $(window).bind('scroll', ()=> {
+      scrollDebounce();
+    });
+
+  });
+
+})(window, document);
+
+/* jshint ignore:end */
