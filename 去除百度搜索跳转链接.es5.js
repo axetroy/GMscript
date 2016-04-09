@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name              remove the jump link in BAIDU (ECMA5)
+// @name              remove the jump link in BAIDU (ECMA6)
 // @author            axetroy
 // @description       去除百度搜索跳转链接
 // @version           2016.4.10
@@ -24,7 +24,7 @@ var _createClass = (function () { function defineProperties(target, props) { for
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-if (require && typeof require === 'function') {
+if (typeof require !== 'undefined' && typeof require === 'function') {
   require("babel-polyfill");
 }
 

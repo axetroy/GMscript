@@ -17,7 +17,7 @@
 // ==/UserScript==
 
 
-if (require && typeof require === 'function') {
+if (typeof require !== 'undefined' && typeof require === 'function') {
   require("babel-polyfill");
 }
 
