@@ -66,7 +66,8 @@
       #aside #encourage_entry,
       .my_app,.j_encourage_entry，
       .right_section>div.u9_aside,
-      .right_section>div.clearfix
+      .right_section>div.clearfix,
+      .right_section *[data-daid]
       ,
       #pb_adbanner,#pb_adbanner *[data-daid]
       ,
