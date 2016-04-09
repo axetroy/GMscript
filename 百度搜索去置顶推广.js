@@ -1,15 +1,20 @@
 // ==UserScript==
 // @name              去百度搜索置顶推广
 // @author            axetroy
+// @contributor       axetroy
 // @description       去除插入在百度搜索结果头部、尾部的推广链接。
-// @version           2016.4.8
+// @version           2016.4.8.2
 // @grant             none
 // @include           *www.baidu.com*
+// @include           *zhidao.baidu.com/search*
 // @connect           *
 // @supportURL        http://www.burningall.com
+// @compatible        chrome  完美运行
+// @compatible        firefox  完美运行
 // @run-at            document-start
 // @contributionURL   troy450409405@gmail.com|alipay.com
 // @namespace         https://greasyfork.org/zh-CN/users/3400-axetroy
+// @license           The MIT License (MIT); http://opensource.org/licenses/MIT
 // ==/UserScript==
 
 /* jshint ignore:start */
@@ -21,7 +26,12 @@
   var ES6Support = true;
 
   try {
-    class test {
+    let test_let = true;
+    const test_const = true;
+    var test_tpl_str = `233`;
+    var test_arrow_fn = (a = '233') => {
+    };
+    class test_class {
 
     }
   } catch (e) {
@@ -34,7 +44,7 @@
 
   if (!ES6Support) return;
 
-  let noop = function () {
+  let noop = ()=> {
   };
 
   class jqLite {
@@ -58,24 +68,8 @@
 
     bind(types = '', fn = noop) {
       this.each((ele)=> {
-        if (Object.prototype.toString.call(types) === '[object String]') {
-          types.trim().split(/\s{1,}/).forEach((type)=> {
-            ele.addEventListener(type, (e) => {
-              e = window.event ? window.event : (e ? e : null);
-              let target = e.target || e.srcElement;
-              if (fn.call(target, e) === false) {
-                e.returnValue = true;
-                e.cancelBubble = true;
-                e.preventDefault && e.preventDefault();
-                e.stopPropagation && e.stopPropagation();
-                return false;
-              }
-            }, false);
-
-          });
-        } else {
+        types.trim().split(/\s{1,}/).forEach((type)=> {
           ele.addEventListener(type, (e) => {
-            e = window.event ? window.event : (e ? e : null);
             let target = e.target || e.srcElement;
             if (fn.call(target, e) === false) {
               e.returnValue = true;
@@ -85,12 +79,11 @@
               return false;
             }
           }, false);
-        }
-
+        });
       });
     }
 
-    observe(config, fn = noop) {
+    observe(fn = noop, config = {childList: true, subtree: true}) {
       this.each((ele) => {
         let MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
         let observer = new MutationObserver((mutations) => {
@@ -107,6 +100,31 @@
 
   let $ = (selectors) => {
     return new jqLite(selectors);
+  };
+
+  let $timeout = (fn = noop, delay = 0) => {
+    return window.setTimeout(fn, delay);
+  };
+
+  $timeout.cancel = function (timerId) {
+    window.clearTimeout(timerId);
+  };
+
+  let $interval = (fn, delay) => {
+    let interval = () => {
+      fn.call(this);
+      id = setTimeout(interval, delay);
+    };
+
+    let id = setTimeout(interval, delay);
+
+    return function () {
+      window.clearTimeout(id);
+    }
+  };
+
+  $interval.cancel = (timerFunc) => {
+    timerFunc();
   };
 
   const defaultRules = `
@@ -126,6 +144,10 @@
     ,
     div.s-news-list-wrapper>div
     :not([data-relatewords*="1"])
+    ,
+    div.list-wraper dl[data-oad]
+    :not([data-fb])
+    :not([filtered])
   `.trim().replace(/\n/img, '').replace(/\s{1,}([^a-zA-Z])/g, '$1');
 
   let adsCount = 0;
@@ -164,17 +186,14 @@
 
   }
 
-  let $interval = window.setInterval(function () {
+  let loop = $interval(()=> {
     new main().filter().turn();
   }, 50);
 
   $(window.document).bind('DOMContentLoaded', () => {
     new main().filter().turn();
-    window.clearInterval($interval);
-    $(window.document).observe({
-      "childList": true,
-      "subtree": true
-    }, () => {
+    $interval.cancel(loop);
+    $(window.document).observe(() => {
       new main().filter().turn();
     });
 
@@ -182,6 +201,7 @@
 
   console.info('去广告启动...');
 
-})(typeof window === 'undefined' ? this : window);
+})(window);
 
 /* jshint ignore:end */
+
