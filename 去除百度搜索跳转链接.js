@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name              remove the jump link in BAIDU
+// @name              remove the jump link in BAIDU (ECMA6)
 // @author            axetroy
 // @description       去除百度搜索跳转链接
-// @version           2016.4.9.4
+// @version           2016.4.10
 // @grant             GM_xmlhttpRequest
 // @include           *www.baidu.com*
 // @connect           tags
@@ -15,6 +15,11 @@
 // @namespace         https://greasyfork.org/zh-CN/users/3400-axetroy
 // @license           The MIT License (MIT); http://opensource.org/licenses/MIT
 // ==/UserScript==
+
+
+if (require && typeof require === 'function') {
+  require("babel-polyfill");
+}
 
 /* jshint ignore:start */
 ;(function (window, document) {
@@ -45,27 +50,53 @@
 
   if (!ES6Support) return;
 
-  let noop = function () {
+  let noop = () => {
   };
 
+  /**
+   * a lite jquery mock
+   */
   class jqLite {
-    constructor(selectors = '') {
+    constructor(selectors = '', context = document) {
       this.selectors = selectors;
-      let elements = typeof selectors === 'string' ?
-        document.querySelectorAll(selectors) :
-        selectors.length ? selectors : [selectors];
-      for (let i = 0; i < elements.length; i++) {
-        this[i] = elements[i];
+      this.context = context;
+      this.length = 0;
+
+      switch (typeof selectors) {
+        case 'undefined':
+          break;
+        case 'string':
+          Array.from(context.querySelectorAll(selectors), (ele, i) => {
+            this[i] = ele;
+            this.length++;
+          }, this);
+          break;
+        case 'object':
+          if (selectors.length) {
+            Array.from(selectors, (ele, i) => {
+              this[i] = ele;
+              this.length++;
+            }, this);
+          } else {
+            this[0] = selectors;
+            this.length = 1;
+          }
+          break;
+        case 'function':
+          this.ready(selectors);
+          break;
+        default:
+
       }
-      this.length = elements.length;
-    }
+
+    };
 
     each(fn = noop) {
       for (let i = 0; i < this.length; i++) {
         fn.call(this, this[i], i);
       }
       return this;
-    }
+    };
 
     bind(types = '', fn = noop) {
       this.each((ele)=> {
@@ -82,6 +113,12 @@
           }, false);
         });
       });
+    };
+
+    ready(fn = noop) {
+      this.context.addEventListener('DOMContentLoaded', e => {
+        fn.call(this);
+      }, false);
     }
 
     observe(fn = noop, config = {childList: true, subtree: true}) {
@@ -95,52 +132,124 @@
         observer.observe(ele, config);
       });
       return this;
-    }
+    };
 
-    static visible(ele) {
-      let pos = ele.getBoundingClientRect();
-      let w;
-      let h;
-      let inViewPort;
-      if (document.documentElement.getBoundingClientRect) {
-        w = document.documentElement.clientWidth || document.body.clientWidth;
-        h = document.documentElement.clientHeight || document.body.clientHeight;
-        inViewPort = pos.top > h || pos.bottom < 0 || pos.left > w || pos.right < 0;
-        return inViewPort ? false : true;
+    attr(attr, value) {
+      // one agm
+      if (!arguments.length === 1) {
+        // get attr value
+        if (typeof attr === 'string') {
+          return this[0].getAttribute(attr);
+        }
+        // set attr with a json
+        else if (typeof attr === 'object') {
+          this.each(function (ele) {
+            for (let at in attr) {
+              if (attr.hasOwnProperty(at)) {
+                ele.setAttribute(at, value);
+              }
+            }
+          });
+        }
+        return value;
       }
+      // set
+      else if (arguments.length === 2) {
+        this.each(function (ele) {
+          ele.setAttribute(attr, value);
+        });
+        return this;
+      }
+      else {
+        return this;
+      }
+    };
+
+    removeAttr(attr) {
+      if (arguments.length === 1) {
+        this.each((ele)=> {
+          ele.removeAttribute(attr);
+        });
+      }
+      return this;
     }
 
-    static text(ele) {
+    get text() {
+      let ele = this[0];
       return ele.innerText ? ele.innerText : ele.textContent;
-    }
+    };
 
-    static debounce(fn, delay) {
-      let timer;
-      return function () {
-        let agm = arguments;
-        window.clearTimeout(timer);
-        timer = window.setTimeout(()=> {
-          fn.apply(this, agm);
-        }, delay);
+    static get fn() {
+      let visible = (ele)=> {
+        let pos = ele.getBoundingClientRect();
+        let w;
+        let h;
+        let inViewPort;
+        let docEle = document.documentElement;
+        let docBody = document.body;
+        if (docEle.getBoundingClientRect) {
+          w = docEle.clientWidth || docBody.clientWidth;
+          h = docEle.clientHeight || docBody.clientHeight;
+          inViewPort = pos.top > h || pos.bottom < 0 || pos.left > w || pos.right < 0;
+          return inViewPort ? false : true;
+        }
+      };
+      let debounce = (fn, delay)=> {
+        let timer;
+        return function () {
+          let agm = arguments;
+          window.clearTimeout(timer);
+          timer = window.setTimeout(()=> {
+            fn.apply(this, agm);
+          }, delay);
+        }
+      };
+      return {
+        visible,
+        debounce
       }
-    }
+    };
 
   }
 
-  let $ = (selectors = '') => {
-    return new jqLite(selectors);
+  let $ = (selectors = '', context = document) => {
+    return new jqLite(selectors, context);
   };
 
-  let $cache = {};
+  /**
+   * cache the ajax response result
+   * @type {{}}
+   */
+  let $$cache = {};
 
+  /**
+   * timeout wrapper
+   * @param fn
+   * @param delay
+   * @returns {number}
+   */
   let $timeout = (fn = noop, delay = 0) => {
     return window.setTimeout(fn, delay);
   };
 
+  /**
+   * cancel timer
+   * @param timerId
+   * @returns {*}
+   */
   $timeout.cancel = function (timerId) {
     window.clearTimeout(timerId);
+    return timerId;
   };
 
+  let $$count = 0;
+
+  /**
+   * ajax function
+   * @param url           the url request
+   * @param aEle          the A link element [non essential variables]
+   * @returns {Promise}
+   */
   let $ajax = (url, aEle) => {
     var deferred = $q.defer();
 
@@ -153,9 +262,9 @@
     }
 
     // if has cache
-    if ($cache[url]) {
+    if ($$cache[url]) {
       $timeout(function () {
-        deferred.resolve({aEle, url, response: $cache[url]});
+        deferred.resolve({aEle, url, response: $$cache[url]});
         return deferred.promise;
       });
     }
@@ -173,46 +282,58 @@
       url = url.replace(/^(http|https):/im, window.location.protocol);
     }
 
-    if (config.debug) console.info(`ajax:${url}`);
+    if (config.debug) console.info(`${$$count++}-ajax:${url}`);
 
-    if (aEle && aEle.setAttribute) aEle.setAttribute("decoding", "true");
+    if (aEle) $(aEle).attr('decoding', '');
 
     GM_xmlhttpRequest({
       method: "GET",
       url: url,
       timeout: 5000,
-      anonymous: true,
+      anonymous: !!aEle,
       onreadystatechange: function (response) {
         if (response.readyState !== 4) return;
         let data = {aEle, url, response};
-        $cache[url] = response;
         if (/^(2|3)/.test(response.status)) {
-          aEle && aEle.setAttribute('decoded', 'true');
+          $$cache[url] = response;
+          aEle && $(aEle).attr('decoded', '');
           deferred.resolve(data);
         } else {
-          aEle && aEle.setAttribute('decoded', 'false');
           deferred.reject(data);
         }
+        aEle && $(aEle).removeAttr('decoding');
       },
       ontimeout: (response)=> {
         let data = {aEle, url, response};
-        aEle && aEle.setAttribute('decoded', 'false');
+        config.debug && console.error(data);
+        aEle && $(aEle).removeAttr('decoding');
         deferred.reject(data);
+        response && response.finalUrl ? deferred.resolve(data) : deferred.reject(data);
       },
       onerror: (response)=> {
         let data = {aEle, url, response};
-        aEle && aEle.setAttribute('decoded', 'false');
-        deferred.reject(data);
+        config.debug && console.error(data);
+        aEle && $(aEle).removeAttr('decoding');
+        response && response.finalUrl ? deferred.resolve(data) : deferred.reject(data);
       }
     });
 
     return deferred.promise;
   };
 
+  /**
+   * simple deferred object like angularJS $q or q promise library
+   * @param fn                 promise function
+   * @returns {Promise}
+   */
   let $q = function (fn = noop) {
     return new Promise(fn);
   };
 
+  /**
+   * generator a deferred object use like angularJS's $q service
+   * @returns {{}}
+   */
   $q.defer = function () {
     let deferred = {};
 
@@ -228,31 +349,37 @@
     return deferred;
   };
 
-  let redirect = `www.baidu.com/link?url`;
-  let config = {
+  // config
+  const config = {
     rules: `
-      a[href*="${redirect}"]
+      a[href*="www.baidu.com/link?url"]
       :not(.m)
       :not([decoding])
       :not([decoded])
-      :not([decodeAll])
     `.trim().replace(/\n/img, '').replace(/\s{1,}([^a-zA-Z])/g, '$1'),
-    reloadRules: `a[decoded*="false"]`,
     debug: false
   };
+
   let isDecodingAll = false;
 
+  /**
+   * the main class to bootstrap this script
+   */
   class main {
     constructor(agm = '') {
       if (!agm) return this;
-      // 可视区域内的A链接
+
       this.inViewPort = [];
 
       $(agm).each((ele) => {
-        if (jqLite.visible(ele)) this.inViewPort.push(ele);
+        if (jqLite.fn.visible(ele)) this.inViewPort.push(ele);
       });
     }
 
+    /**
+     * request a url which has origin links
+     * @returns {Promise}
+     */
     all() {
       var deferred = $q.defer();
 
@@ -265,14 +392,18 @@
 
           if (!data.response) return;
           let response = data.response.responseText;
+
+          // remove the image which load with http not https
+          response = response.replace(/src=[^>]*/, '');
+
           let html = document.createElement('html');
           html.innerHTML = response;
 
-          $('.t>a:not(.OP_LOG_LINK):not([decoded]):not([decodeAll])').each((sourceEle)=> {
-            $(html.querySelectorAll('.f>a')).each((targetEle) => {
-              if (jqLite.text(sourceEle) === jqLite.text(targetEle)) {
+          $('.t>a:not(.OP_LOG_LINK):not([decoded])').each((sourceEle)=> {
+            $('.f>a', html).each((targetEle) => {
+              if ($(sourceEle).text === $(targetEle).text) {
                 sourceEle.href = targetEle.href;
-                sourceEle.setAttribute('decodeAll', 'true');
+                $(sourceEle).attr('decoded', '');
                 if (config.debug) sourceEle.style.background = 'green';
               }
             });
@@ -287,7 +418,11 @@
       return deferred.promise;
     }
 
-    one() {
+    /**
+     * request the A tag's href one by one those in view port
+     * @returns {main}
+     */
+    oneByOne() {
       $(this.inViewPort).each(function (aEle) {
         if (/www\.baidu\.com\/link\?url=/im.test(aEle.href) === false)return;
         $ajax(aEle.href, aEle)
@@ -304,50 +439,61 @@
 
   console.info('去跳转启动...');
 
-  $(document).bind('DOMContentLoaded', ()=> {
+  /**
+   * bootstrap the script
+   */
+  $(()=> {
+
+    let init = ()=> {
+      new main(config.rules).all()
+        .then(function () {
+          new main(config.rules).oneByOne();
+        }, function () {
+          new main(config.rules).oneByOne();
+        });
+    };
 
     // init
-    new main(config.rules).all()
-      .then(function () {
-        new main(config.rules).one();
-      });
+    init();
 
-    let observeDebounce = jqLite.debounce((target, addList, removeList) => {
+    let observeDebounce = jqLite.fn.debounce((target, addList, removeList) => {
       if (!addList || !addList.length) return;
       if (isDecodingAll === true) {
-        new main(config.rules).one();
+        new main(config.rules).oneByOne();
       } else {
-        new main(config.rules).all()
-          .then(function () {
-            new main(config.rules).one();
-          });
+        init();
       }
     }, 200);
-
     $(document).observe(function (target, addList, removeList) {
       observeDebounce(target, addList, removeList);
     });
 
-    $(document).bind('mouseover', (e) => {
+    let scrollDebounce = jqLite.fn.debounce(() => {
+      new main(config.rules).oneByOne();
+    }, 200);
+    $(window).bind('scroll', ()=> {
+      scrollDebounce();
+    });
+
+    let overDebouce = jqLite.fn.debounce((e)=> {
       let aEle = e.target;
       if (aEle.tagName !== "A" || !aEle.href || !/w{3}\.baidu\.com\/link\?url=/im.test(aEle.href)) return;
       $ajax(aEle.href, aEle)
         .then(function (data) {
           data.aEle.href = data.response.finalUrl;
         });
+    }, 100);
+    $(document).bind('mouseover', (e) => {
+      overDebouce(e);
     });
 
-    let scrollDebounce = jqLite.debounce(() => {
-      new main(config.rules).one();
-    }, 200);
-    $(window).bind('scroll', ()=> {
-      scrollDebounce();
-    });
 
   });
 
 })(window, document);
 
+
 /* jshint ignore:end */
+
 
 
