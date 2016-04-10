@@ -289,7 +289,7 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
     GM_xmlhttpRequest({
         method: "GET",
         url: url,
-        timeout: 5000,
+        // timeout: 5000,
         anonymous: !!aEle,
         onreadystatechange: function (response) {
           if (response.readyState !== 4) return;
