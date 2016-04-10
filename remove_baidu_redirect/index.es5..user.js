@@ -3,7 +3,7 @@
 // @name              remove the jump link in BAIDU (ECMA6)
 // @author            axetroy
 // @description       去除百度搜索跳转链接
-// @version           2016.4.10.1
+// @version           2016.4.10.2
 // @grant             GM_xmlhttpRequest
 // @include           *www.baidu.com*
 // @connect           tags
@@ -28,11 +28,11 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
 }
 
 /* jshint ignore:start */
-;(function (window, document) {
+(function (window, document) {
 
   'use strict';
 
-  var ES6Support = true;
+  var ECMA6_Support = true;
 
   try {
     var test_tpl_str;
@@ -61,12 +61,14 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
      * 促进大家升级浏览器，拯救前端，就是拯救我自己
      */
     alert('你的浏览器不支持ECMA6，去除百度搜索跳转链接将失效，请升级浏览器和脚本管理器');
-    ES6Support = false;
+    ECMA6_Support = false;
   }
 
-  if (!ES6Support) return;
+  if (!ECMA6_Support) return;
 
-  var noop = function noop() {};
+  var noop = function noop(x) {
+    return x;
+  };
 
   /**
    * a lite jquery mock
@@ -172,7 +174,7 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
 
     jqLite.prototype.attr = function attr(_attr, value) {
       // one agm
-      if (!arguments.length === 1) {
+      if (arguments.length === 1) {
         // get attr value
         if (typeof _attr === 'string') {
           return this[0].getAttribute(_attr);
@@ -186,8 +188,8 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
                 }
               }
             });
+            return value;
           }
-        return value;
       }
       // set
       else if (arguments.length === 2) {
@@ -244,9 +246,17 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
             }, delay);
           };
         };
+        var merge = function merge() {
+          for (var _len = arguments.length, sources = Array(_len), _key = 0; _key < _len; _key++) {
+            sources[_key] = arguments[_key];
+          }
+
+          return Object.assign.apply(Object, [{}].concat(sources));
+        };
         return {
           visible: visible,
-          debounce: debounce
+          debounce: debounce,
+          merge: merge
         };
       }
     }]);
@@ -260,12 +270,6 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
 
     return new jqLite(selectors, context);
   };
-
-  /**
-   * cache the ajax response result
-   * @type {{}}
-   */
-  var $$cache = {};
 
   /**
    * timeout wrapper
@@ -290,82 +294,87 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
     return timerId;
   };
 
-  var $$count = 0;
-
   /**
-   * ajax function
-   * @param url           the url request
-   * @param aEle          the A link element [non essential variables]
+   * http service
+   * @param ops
    * @returns {Promise}
    */
-  var $ajax = function $ajax(url, aEle) {
+  var $http = function $http() {
+    var ops = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
     var deferred = $q.defer();
 
-    // if in BAIDU home page
-    if (new RegExp(window.location.host + '/?$', 'im').test(url)) {
-      $timeout(function () {
-        deferred.resolve({ aEle: aEle, url: url, response: '' });
-        return deferred.promise;
-      });
-    }
+    var onreadystatechange = function onreadystatechange(response) {
+      if (response.readyState !== 4) return;
+      response.requestUrl = ops.url;
+      if (/^(2|3)/.test(response.status)) {
+        deferred.resolve(response);
+      } else {
+        deferred.reject(response);
+      }
+    };
 
-    // if has cache
-    if ($$cache[url]) {
-      $timeout(function () {
-        deferred.resolve({ aEle: aEle, url: url, response: $$cache[url] });
-        return deferred.promise;
-      });
-    }
+    var ontimeout = function ontimeout(response) {
+      response.requestUrl = ops.url;
+      response && response.finalUrl ? deferred.resolve(response) : deferred.reject(response);
+    };
 
-    // not match the url
-    if (!/w{3}\.baidu\.com\/link\?url=/im.test(url) && !/w{3}\.baidu\.com\/s/.test(url)) {
-      $timeout(function () {
-        deferred.resolve({ aEle: aEle, url: url, response: { finalUrl: url } });
-        return deferred.promise;
-      });
-    }
+    var onerror = function onerror(response) {
+      response.requestUrl = ops.url;
+      response && response.finalUrl ? deferred.resolve(response) : deferred.reject(response);
+    };
+
+    ops = jqLite.fn.merge({
+      onreadystatechange: onreadystatechange,
+      ontimeout: ontimeout,
+      onerror: onerror
+    }, ops);
 
     // make the protocol agree
-    if (!new RegExp('^' + window.location.protocol).test(url)) {
-      url = url.replace(/^(http|https):/im, window.location.protocol);
+    if (!new RegExp('^' + window.location.protocol).test(ops.url)) {
+      ops.url = ops.url.replace(/^(http|https):/im, window.location.protocol);
     }
 
-    if (config.debug) console.info($$count++ + '-ajax:' + url);
+    GM_xmlhttpRequest(ops);
+    return deferred.promise;
+  };
 
-    if (aEle) $(aEle).attr('decoding', '');
+  $http.head = function (url) {
+    var ops = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-    GM_xmlhttpRequest({
-      method: "GET",
-      url: url,
-      // timeout: 5000,
-      anonymous: !!aEle,
-      onreadystatechange: function onreadystatechange(response) {
-        if (response.readyState !== 4) return;
-        var data = { aEle: aEle, url: url, response: response };
-        if (/^(2|3)/.test(response.status)) {
-          $$cache[url] = response;
-          aEle && $(aEle).attr('decoded', '');
-          deferred.resolve(data);
-        } else {
-          deferred.reject(data);
-        }
-        aEle && $(aEle).removeAttr('decoding');
-      },
-      ontimeout: function ontimeout(response) {
-        var data = { aEle: aEle, url: url, response: response };
-        config.debug && console.error(data);
-        aEle && $(aEle).removeAttr('decoding');
-        deferred.reject(data);
-        response && response.finalUrl ? deferred.resolve(data) : deferred.reject(data);
-      },
-      onerror: function onerror(response) {
-        var data = { aEle: aEle, url: url, response: response };
-        config.debug && console.error(data);
-        aEle && $(aEle).removeAttr('decoding');
-        response && response.finalUrl ? deferred.resolve(data) : deferred.reject(data);
-      }
+    var deferred = $q.defer();
+    ops = jqLite.fn.merge(ops, { url: url, method: 'HEAD' });
+    $http(ops).then(function (response) {
+      deferred.resolve(response);
+    }, function (response) {
+      deferred.reject(response);
     });
+    return deferred.promise;
+  };
 
+  $http.get = function (url) {
+    var ops = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+    var deferred = $q.defer();
+    ops = jqLite.fn.merge(ops, { url: url, method: 'GET' });
+    $http(ops).then(function (response) {
+      deferred.resolve(response);
+    }, function (response) {
+      deferred.reject(response);
+    });
+    return deferred.promise;
+  };
+
+  $http.post = function (url) {
+    var ops = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+    var deferred = $q.defer();
+    ops = jqLite.fn.merge(ops, { url: url, method: 'POST' });
+    $http(ops).then(function (response) {
+      deferred.resolve(response);
+    }, function (response) {
+      deferred.reject(response);
+    });
     return deferred.promise;
   };
 
@@ -388,33 +397,35 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
     var deferred = {};
 
     deferred.promise = new Promise(function (resolve, reject) {
-      deferred.resolve = function (data) {
-        resolve(data);
+      deferred.resolve = function (response) {
+        resolve(response);
       };
-      deferred.reject = function (data) {
-        reject(data);
+      deferred.reject = function (response) {
+        reject(response);
       };
     });
 
     return deferred;
   };
 
-  $q.resolve = function (data) {
+  $q.resolve = function (response) {
     return $q(function (resolve, reject) {
-      resolve(data);
+      resolve(response);
     });
   };
 
-  $q.reject = function (data) {
+  $q.reject = function (response) {
     return $q(function (resolve, reject) {
-      reject(data);
+      reject(response);
     });
   };
 
   // config
   var config = {
     rules: '\n      a[href*="www.baidu.com/link?url"]\n      :not(.m)\n      :not([decoding])\n      :not([decoded])\n    '.trim().replace(/\n/img, '').replace(/\s{1,}([^a-zA-Z])/g, '$1'),
-    debug: true
+    debug: false,
+    debugDecoded: '\n      background-color:green !important;\n      color:#303030 !important;\n    ',
+    debugDecoding: '\n      background-color:yellow !important;\n      color:#303030 !important;\n    '
   };
 
   var isDecodingAll = false;
@@ -436,7 +447,7 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
       this.inViewPort = [];
 
       $(agm).each(function (ele) {
-        if (jqLite.fn.visible(ele)) _this5.inViewPort.push(ele);
+        return jqLite.fn.visible(ele) && _this5.inViewPort.push(ele);
       });
     }
 
@@ -451,32 +462,56 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
       var url = window.top.location.href.replace(/(\&)(tn=\w+)(\&)/img, '$1' + 'tn=baidulocal' + '$3');
 
       isDecodingAll = true;
-      $ajax(url).then(function (data) {
+
+      $http.get(url, { timeout: 5000 }).then(function (response) {
         isDecodingAll = false;
 
-        if (!data.response) return;
-        var response = data.response.responseText;
+        if (!response) return;
+        var responseText = response.responseText;
 
-        // remove the image which load with http not https
-        response = response.replace(/src=[^>]*/, '');
+        // remove the image/script/css resource
+        responseText = responseText.replace(/src=[^>]*/, '');
 
         var html = document.createElement('html');
-        html.innerHTML = response;
+        html.innerHTML = responseText;
 
         $('.t>a:not(.OP_LOG_LINK):not([decoded])').each(function (sourceEle) {
           $('.f>a', html).each(function (targetEle) {
             if ($(sourceEle).text === $(targetEle).text) {
               sourceEle.href = targetEle.href;
-              $(sourceEle).attr('decoded', '');
-              if (config.debug) sourceEle.style.background = 'green';
+              $(sourceEle).attr('decoded', true);
+              config.debug && (sourceEle.style.cssText = config.debugDecoded);
             }
           });
         });
 
-        deferred.resolve(data);
-      }, function (data) {
+        deferred.resolve(response);
+      }, function (response) {
         isDecodingAll = false;
-        deferred.reject(data);
+        deferred.reject(response);
+      });
+
+      return deferred.promise;
+    };
+
+    main.prototype.one = function one(aEle) {
+      var deferred = $q.defer();
+
+      if (!main.match(aEle)) return $q.reject();
+
+      $(aEle).attr('decoding', true);
+
+      // debug info
+      config.debug && (aEle.style.cssText = config.debugDecoding);
+
+      $http.get(aEle.href).then(function (response) {
+        $(aEle).attr('href', response.finalUrl).attr('decoded', true).removeAttr('decoding');
+        // debug info
+        config.debug && (aEle.style.cssText = config.debugDecoded);
+        deferred.resolve(response);
+      }, function (response) {
+        console.error(response);
+        deferred.reject(response);
       });
 
       return deferred.promise;
@@ -488,15 +523,25 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
      */
 
     main.prototype.oneByOne = function oneByOne() {
+      var _this6 = this;
+
       $(this.inViewPort).each(function (aEle) {
-        if (/www\.baidu\.com\/link\?url=/im.test(aEle.href) === false) return;
-        $ajax(aEle.href, aEle).then(function (data) {
-          if (!data) return;
-          data.aEle.href = data.response.finalUrl;
-          if (config.debug) data.aEle.style.background = 'green';
-        });
+        if (!main.match(aEle)) return;
+        _this6.one(aEle);
       });
       return this;
+    };
+
+    /**
+     * match the Element
+     */
+
+    main.match = function match(ele) {
+      if (ele.tagName !== "A" || !ele.href || !/www\.baidu\.com\/link\?url=/im.test(ele.href) || !!$(ele).attr('decoded') || !!$(ele).attr('decoding')) {
+        return false;
+      } else {
+        return true;
+      }
     };
 
     return main;
@@ -511,8 +556,10 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
 
     var init = function init() {
       new main(config.rules).all().then(function () {
-        new main(config.rules).oneByOne();
+        return $q.resolve();
       }, function () {
+        return $q.resolve();
+      }).then(function () {
         new main(config.rules).oneByOne();
       });
     };
@@ -520,34 +567,33 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
     // init
     init();
 
-    var observeDebounce = jqLite.fn.debounce(function (target, addList, removeList) {
-      if (!addList || !addList.length) return;
-      if (isDecodingAll === true) {
-        new main(config.rules).oneByOne();
-      } else {
-        init();
-      }
-    }, 200);
-    $(document).observe(function (target, addList, removeList) {
+    var observeDebounce = jqLite.fn.debounce(function (target) {
+      var addList = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
+      var removeList = arguments.length <= 2 || arguments[2] === undefined ? [] : arguments[2];
+
+      if (!addList.length) return;
+      isDecodingAll ? new main(config.rules).oneByOne() : init();
+    }, 100);
+    $(document).observe(function (target) {
+      var addList = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
+      var removeList = arguments.length <= 2 || arguments[2] === undefined ? [] : arguments[2];
+
       observeDebounce(target, addList, removeList);
     });
 
     var scrollDebounce = jqLite.fn.debounce(function () {
       new main(config.rules).oneByOne();
-    }, 200);
+    }, 100);
     $(window).bind('scroll', function () {
       scrollDebounce();
     });
 
-    var overDebouce = jqLite.fn.debounce(function (e) {
-      var aEle = e.target;
-      if (aEle.tagName !== "A" || !aEle.href || !/w{3}\.baidu\.com\/link\?url=/im.test(aEle.href)) return;
-      $ajax(aEle.href, aEle).then(function (data) {
-        data.aEle.href = data.response.finalUrl;
-      });
-    }, 100);
     $(document).bind('mouseover', function (e) {
-      overDebouce(e);
+      var aEle = e.target;
+
+      if (!main.match(aEle)) return;
+
+      new main().one(aEle);
     });
   });
 })(window, document);
