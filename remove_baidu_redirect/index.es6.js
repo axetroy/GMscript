@@ -2,7 +2,7 @@
 // @name              remove the jump link in BAIDU (ECMA6)
 // @author            axetroy
 // @description       去除百度搜索跳转链接
-// @version           2016.4.10
+// @version           2016.4.10.1
 // @grant             GM_xmlhttpRequest
 // @include           *www.baidu.com*
 // @connect           tags
