@@ -13,7 +13,7 @@ module.exports = function (grunt) {
           // The result file's extension is always .js
           // "./dist/module.js": ["./modules/index.js"]
           // "./dist/build.js": ["./modules/*.js"]
-          "./index.es5.user.js": ["./index.es6.user.js"]
+          "./dist/index.user.js": ["./index.js"]
         }
       }
     },
