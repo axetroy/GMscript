@@ -2,7 +2,7 @@
   "name": "remove_baidu_redirect",
   "version": "1.0.0",
   "description": "",
-  "main": "index.es6.js",
+  "main": "index.js",
   "devDependencies": {
     "babelify": "^6.1.0",
     "grunt": "^0.4.5",
