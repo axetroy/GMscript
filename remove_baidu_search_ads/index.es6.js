@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name              去百度搜索置顶推广
+// @name              去百度搜索置顶推广 (ECMA6)
 // @author            axetroy
 // @contributor       axetroy
 // @description       去除插入在百度搜索结果头部、尾部的推广链接。
