@@ -68,26 +68,26 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
         case 'string':
           Array.from(context.querySelectorAll(selectors), (ele, i) => {
             this[i] = ele;
-          this.length++;
-      }, this);
-      break;
-    case 'object':
-      if (selectors.length) {
-        Array.from(selectors, (ele, i) => {
-          this[i] = ele;
-        this.length++;
-      }, this);
-      } else {
-        this[0] = selectors;
-        this.length = 1;
-      }
-      break;
-    case 'function':
-      this.ready(selectors);
-      break;
-    default:
+            this.length++;
+          }, this);
+          break;
+        case 'object':
+          if (selectors.length) {
+            Array.from(selectors, (ele, i) => {
+              this[i] = ele;
+              this.length++;
+            }, this);
+          } else {
+            this[0] = selectors;
+            this.length = 1;
+          }
+          break;
+        case 'function':
+          this.ready(selectors);
+          break;
+        default:
 
-    }
+      }
 
     };
 
@@ -101,36 +101,36 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
     bind(types = '', fn = noop) {
       this.each((ele)=> {
         types.trim().split(/\s{1,}/).forEach((type)=> {
-        ele.addEventListener(type, (e) => {
-        let target = e.target || e.srcElement;
-      if (fn.call(target, e) === false) {
-        e.returnValue = true;
-        e.cancelBubble = true;
-        e.preventDefault && e.preventDefault();
-        e.stopPropagation && e.stopPropagation();
-        return false;
-      }
-    }, false);
-    });
-    });
+          ele.addEventListener(type, (e) => {
+            let target = e.target || e.srcElement;
+            if (fn.call(target, e) === false) {
+              e.returnValue = true;
+              e.cancelBubble = true;
+              e.preventDefault && e.preventDefault();
+              e.stopPropagation && e.stopPropagation();
+              return false;
+            }
+          }, false);
+        });
+      });
     };
 
     ready(fn = noop) {
       this.context.addEventListener('DOMContentLoaded', e => {
         fn.call(this);
-    }, false);
+      }, false);
     }
 
     observe(fn = noop, config = {childList: true, subtree: true}) {
       this.each((ele) => {
         let MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
-      let observer = new MutationObserver((mutations) => {
+        let observer = new MutationObserver((mutations) => {
           mutations.forEach((mutation) => {
-          fn.call(this, mutation.target, mutation.addedNodes, mutation.removedNodes);
-    });
-    });
-      observer.observe(ele, config);
-    });
+            fn.call(this, mutation.target, mutation.addedNodes, mutation.removedNodes);
+          });
+        });
+        observer.observe(ele, config);
+      });
       return this;
     };
 
@@ -169,7 +169,7 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
       if (arguments.length === 1) {
         this.each((ele)=> {
           ele.removeAttribute(attr);
-      });
+        });
       }
       return this;
     }
@@ -200,8 +200,8 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
           let agm = arguments;
           window.clearTimeout(timer);
           timer = window.setTimeout(()=> {
-              fn.apply(this, agm);
-        }, delay);
+            fn.apply(this, agm);
+          }, delay);
         }
       };
       return {
@@ -287,36 +287,36 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
     if (aEle) $(aEle).attr('decoding', '');
 
     GM_xmlhttpRequest({
-        method: "GET",
-        url: url,
-        // timeout: 5000,
-        anonymous: !!aEle,
-        onreadystatechange: function (response) {
-          if (response.readyState !== 4) return;
-          let data = {aEle, url, response};
-          if (/^(2|3)/.test(response.status)) {
-            $$cache[url] = response;
-            aEle && $(aEle).attr('decoded', '');
-            deferred.resolve(data);
-          } else {
-            deferred.reject(data);
-          }
-          aEle && $(aEle).removeAttr('decoding');
-        },
-        ontimeout: (response)=> {
+      method: "GET",
+      url: url,
+      // timeout: 5000,
+      anonymous: !!aEle,
+      onreadystatechange: function (response) {
+        if (response.readyState !== 4) return;
         let data = {aEle, url, response};
-    config.debug && console.error(data);
-    aEle && $(aEle).removeAttr('decoding');
-    deferred.reject(data);
-    response && response.finalUrl ? deferred.resolve(data) : deferred.reject(data);
-  },
-    onerror: (response)=> {
-      let data = {aEle, url, response};
-      config.debug && console.error(data);
-      aEle && $(aEle).removeAttr('decoding');
-      response && response.finalUrl ? deferred.resolve(data) : deferred.reject(data);
-    }
-  });
+        if (/^(2|3)/.test(response.status)) {
+          $$cache[url] = response;
+          aEle && $(aEle).attr('decoded', '');
+          deferred.resolve(data);
+        } else {
+          deferred.reject(data);
+        }
+        aEle && $(aEle).removeAttr('decoding');
+      },
+      ontimeout: (response)=> {
+        let data = {aEle, url, response};
+        config.debug && console.error(data);
+        aEle && $(aEle).removeAttr('decoding');
+        deferred.reject(data);
+        response && response.finalUrl ? deferred.resolve(data) : deferred.reject(data);
+      },
+      onerror: (response)=> {
+        let data = {aEle, url, response};
+        config.debug && console.error(data);
+        aEle && $(aEle).removeAttr('decoding');
+        response && response.finalUrl ? deferred.resolve(data) : deferred.reject(data);
+      }
+    });
 
     return deferred.promise;
   };
@@ -349,6 +349,18 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
     return deferred;
   };
 
+  $q.resolve = function (data) {
+    return $q(function (resolve, reject) {
+      resolve(data);
+    });
+  };
+
+  $q.reject = function (data) {
+    return $q(function (resolve, reject) {
+      reject(data);
+    });
+  };
+
   // config
   const config = {
     rules: `
@@ -357,7 +369,7 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
       :not([decoding])
       :not([decoded])
     `.trim().replace(/\n/img, '').replace(/\s{1,}([^a-zA-Z])/g, '$1'),
-    debug: false
+    debug: true
   };
 
   let isDecodingAll = false;
@@ -373,7 +385,7 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
 
       $(agm).each((ele) => {
         if (jqLite.fn.visible(ele)) this.inViewPort.push(ele);
-    });
+      });
     }
 
     /**
@@ -401,13 +413,13 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
 
           $('.t>a:not(.OP_LOG_LINK):not([decoded])').each((sourceEle)=> {
             $('.f>a', html).each((targetEle) => {
-            if ($(sourceEle).text === $(targetEle).text) {
-            sourceEle.href = targetEle.href;
-            $(sourceEle).attr('decoded', '');
-            if (config.debug) sourceEle.style.background = 'green';
-          }
-        });
-        });
+              if ($(sourceEle).text === $(targetEle).text) {
+                sourceEle.href = targetEle.href;
+                $(sourceEle).attr('decoded', '');
+                if (config.debug) sourceEle.style.background = 'green';
+              }
+            });
+          });
 
           deferred.resolve(data);
         }, function (data) {
@@ -445,50 +457,50 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
   $(()=> {
 
     let init = ()=> {
-    new main(config.rules).all()
-      .then(function () {
-        new main(config.rules).oneByOne();
-      }, function () {
-        new main(config.rules).oneByOne();
-      });
-};
+      new main(config.rules).all()
+        .then(function () {
+          new main(config.rules).oneByOne();
+        }, function () {
+          new main(config.rules).oneByOne();
+        });
+    };
 
-  // init
-  init();
-
-  let observeDebounce = jqLite.fn.debounce((target, addList, removeList) => {
-      if (!addList || !addList.length) return;
-  if (isDecodingAll === true) {
-    new main(config.rules).oneByOne();
-  } else {
+    // init
     init();
-  }
-}, 200);
-  $(document).observe(function (target, addList, removeList) {
-    observeDebounce(target, addList, removeList);
-  });
 
-  let scrollDebounce = jqLite.fn.debounce(() => {
-      new main(config.rules).oneByOne();
-}, 200);
-  $(window).bind('scroll', ()=> {
-    scrollDebounce();
-});
-
-  let overDebouce = jqLite.fn.debounce((e)=> {
-      let aEle = e.target;
-  if (aEle.tagName !== "A" || !aEle.href || !/w{3}\.baidu\.com\/link\?url=/im.test(aEle.href)) return;
-  $ajax(aEle.href, aEle)
-    .then(function (data) {
-      data.aEle.href = data.response.finalUrl;
+    let observeDebounce = jqLite.fn.debounce((target, addList, removeList) => {
+      if (!addList || !addList.length) return;
+      if (isDecodingAll === true) {
+        new main(config.rules).oneByOne();
+      } else {
+        init();
+      }
+    }, 200);
+    $(document).observe(function (target, addList, removeList) {
+      observeDebounce(target, addList, removeList);
     });
-}, 100);
-  $(document).bind('mouseover', (e) => {
-    overDebouce(e);
-});
+
+    let scrollDebounce = jqLite.fn.debounce(() => {
+      new main(config.rules).oneByOne();
+    }, 200);
+    $(window).bind('scroll', ()=> {
+      scrollDebounce();
+    });
+
+    let overDebouce = jqLite.fn.debounce((e)=> {
+      let aEle = e.target;
+      if (aEle.tagName !== "A" || !aEle.href || !/w{3}\.baidu\.com\/link\?url=/im.test(aEle.href)) return;
+      $ajax(aEle.href, aEle)
+        .then(function (data) {
+          data.aEle.href = data.response.finalUrl;
+        });
+    }, 100);
+    $(document).bind('mouseover', (e) => {
+      overDebouce(e);
+    });
 
 
-});
+  });
 
 })(window, document);
 

@@ -399,10 +399,22 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
     return deferred;
   };
 
+  $q.resolve = function (data) {
+    return $q(function (resolve, reject) {
+      resolve(data);
+    });
+  };
+
+  $q.reject = function (data) {
+    return $q(function (resolve, reject) {
+      reject(data);
+    });
+  };
+
   // config
   var config = {
     rules: '\n      a[href*="www.baidu.com/link?url"]\n      :not(.m)\n      :not([decoding])\n      :not([decoded])\n    '.trim().replace(/\n/img, '').replace(/\s{1,}([^a-zA-Z])/g, '$1'),
-    debug: false
+    debug: true
   };
 
   var isDecodingAll = false;
