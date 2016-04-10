@@ -257,32 +257,30 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
     if (new RegExp(`${window.location.host}\/?$`, 'im').test(url)) {
       $timeout(function () {
         deferred.resolve({aEle, url, response: ''});
-        return deferred.promise;
       });
+      return deferred.promise;
     }
 
     // if has cache
     if ($$cache[url]) {
       $timeout(function () {
         deferred.resolve({aEle, url, response: $$cache[url]});
-        return deferred.promise;
       });
+      return deferred.promise;
     }
 
     // not match the url
     if (!/w{3}\.baidu\.com\/link\?url=/im.test(url) && !/w{3}\.baidu\.com\/s/.test(url)) {
       $timeout(function () {
         deferred.resolve({aEle, url, response: {finalUrl: url}});
-        return deferred.promise;
       });
+      return deferred.promise;
     }
 
     // make the protocol agree
     if (!new RegExp(`^${window.location.protocol}`).test(url)) {
       url = url.replace(/^(http|https):/im, window.location.protocol);
     }
-
-    if (config.debug) console.info(`${$$count++}-ajax:${url}`);
 
     if (aEle) $(aEle).attr('decoding', '');
 
@@ -300,6 +298,10 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
           deferred.resolve(data);
         } else {
           deferred.reject(data);
+        }
+        if (config.debug) {
+          // console.info(`${$$count++}-ajax:${url}`);
+          console.log(`${$$count++}-ajax:${url}`)
         }
         aEle && $(aEle).removeAttr('decoding');
       },
@@ -468,15 +470,15 @@ if (typeof require !== 'undefined' && typeof require === 'function') {
     // init
     init();
 
-    let observeDebounce = jqLite.fn.debounce((target, addList, removeList) => {
-      if (!addList || !addList.length) return;
+    let observeDebounce = jqLite.fn.debounce((target, addList = [], removeList = []) => {
+      if (!addList.length) return;
       if (isDecodingAll === true) {
         new main(config.rules).oneByOne();
       } else {
         init();
       }
     }, 200);
-    $(document).observe(function (target, addList, removeList) {
+    $(document).observe(function (target, addList = [], removeList = []) {
       observeDebounce(target, addList, removeList);
     });
 
