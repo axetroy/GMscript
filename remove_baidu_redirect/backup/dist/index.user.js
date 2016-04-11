@@ -387,7 +387,7 @@ module.exports = $;
 
 var config = {
   rules: '\n      a[href*="www.baidu.com/link?url"]\n      :not(.m)\n      :not([decoding])\n      :not([decoded])\n    '.trim().replace(/\n/img, '').replace(/\s{1,}([^a-zA-Z])/g, '$1'),
-  debug: false,
+  debug: true,
   isDecodingAll: false
 };
 

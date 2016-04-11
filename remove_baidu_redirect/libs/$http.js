@@ -60,4 +60,21 @@ let $http = function (ops = {}) {
   }
 });
 
+$http.jsonp = (url)=> {
+  let deferred = $q.defer();
+
+  let func = function (resp) {
+    script.remove();
+    resp ? deferred.resolve(resp) : deferred.reject(resp);
+  };
+
+  let script = document.createElement('script');
+  script.setAttribute("type", "text/javascript");
+  script.src = url + '?callback=func';
+  document.body.appendChild(script);
+
+
+  return deferred.promise;
+};
+
 module.exports = $http;
