@@ -5,7 +5,7 @@
 var header = `// ==UserScript==
 // @name              remove the jump link in BAIDU (ECMA6)
 // @author            axetroy
-// @@collaborator     axetroy
+// @collaborator      axetroy
 // @description       去除百度搜索跳转链接
 // @version           2016.4.12
 // @grant             GM_xmlhttpRequest
