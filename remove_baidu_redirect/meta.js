@@ -2,17 +2,16 @@
  * Created by axetroy on 16-4-11.
  */
 
-var header = `
-// ==UserScript==
+var header = `// ==UserScript==
 // @name              remove the jump link in BAIDU (ECMA6)
 // @author            axetroy
+// @collaborator      axetroy
 // @description       去除百度搜索跳转链接
 // @version           2016.4.12
 // @grant             GM_xmlhttpRequest
 // @grant             GM_addStyle
 // @include           *www.baidu.com*
-// @connect           tags
-// @connect           *
+// @connect           *www.baidu.com*
 // @compatible        chrome  完美运行
 // @compatible        firefox  完美运行
 // @supportURL        http://www.burningall.com
