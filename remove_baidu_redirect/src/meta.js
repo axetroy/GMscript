@@ -7,7 +7,7 @@ var header = `// ==UserScript==
 // @author            axetroy
 // @collaborator      axetroy
 // @description       去除百度搜索跳转链接
-// @version           2016.4.12
+// @version           2016.4.17
 // @grant             GM_xmlhttpRequest
 // @include           *www.baidu.com*
 // @connect           *www.baidu.com*
