@@ -4,19 +4,23 @@
 
 'use strict';
 
-let $ = require('../libs/jqLite');
+// libs
+let $ = require('../../libs/jqLite');
+let $debounce = require('../../libs/$debounce').$debounce;
+let $addStyle = require('../../libs/$addStyle');
+
 let main = require('./main');
 let config = require('./config');
 
-let scroll = function () {
-  return ()=> {
-    let scrollDebounce = $.fn.debounce(() => {
-      new main(config.rules).oneByOne();
-    }, 100);
-    $(window).bind('scroll', ()=> {
-      scrollDebounce();
-    });
-  }
+let scroll = ()=> {
+  let scrollDebounce = $debounce(()=> {
+    new main(config.rules).oneByOne();
+    config.debug && $addStyle(config.debugStyle);
+  }, 100);
+
+  $(window).bind('scroll', ()=> {
+    scrollDebounce();
+  });
 };
 
-module.exports = scroll();
+module.exports = scroll;

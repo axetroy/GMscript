@@ -1,7 +1,7 @@
 'use strict';
 
+let $q = require('../../libs/$q');
 let main = require('./main');
-let $q = require('../libs/$q');
 let config = require('./config');
 
 let init = ()=> {

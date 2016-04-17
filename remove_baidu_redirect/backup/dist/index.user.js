@@ -1519,7 +1519,7 @@ process.umask = function() { return 0; };
 
 var config = {
   rules: '\n      a[href*="www.baidu.com/link?url"]\n      :not(.m)\n      :not([decoding])\n      :not([decoded])\n    '.trim().replace(/\n/img, '').replace(/\s{1,}([^a-zA-Z])/g, '$1'),
-  debug: false,
+  debug: true,
   debugStyle: '\n  a[decoded]{\n    background-color:green !important;\n    color:#303030 !important;\n  };\n  a[decoding]{\n    background-color:yellow !important;\n    color:#303030 !important;\n  }\n  ',
   isDecodingAll: false
 };

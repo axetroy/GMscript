@@ -4,13 +4,14 @@
 
 'use strict';
 
-let $ = require('../libs/jqLite');
+// libs
+let $ = require('../../libs/jqLite');
+let $debounce = require('../../libs/$debounce').$debounce;
+
 let main = require('./main');
 
-
-let mouseoverDebounce = $.fn.debounce((e) => {
+let mouseoverDebounce = $debounce(e=> {
   let aEle = e.target;
-
   if (aEle.tagName !== "A"
     || !aEle.href
     || !/www\.baidu\.com\/link\?url=/im.test(aEle.href)
@@ -18,20 +19,16 @@ let mouseoverDebounce = $.fn.debounce((e) => {
   ) {
     return;
   }
-
   new main().one(aEle);
-  
-}, 100);
+}, 100, true);
 
-let mouseover = function () {
-  return ()=> {
-    $(document).bind('mouseover', (e) => {
-      mouseoverDebounce(e);
-    });
-  }
+let mouseover = ()=> {
+  $(document).bind('mouseover', e => {
+    mouseoverDebounce(e);
+  });
 };
 
-module.exports = mouseover();
+module.exports = mouseover;
 
 
 

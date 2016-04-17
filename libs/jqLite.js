@@ -141,22 +141,11 @@ class jqLite {
         return inViewPort ? false : true;
       }
     };
-    let debounce = (fn, delay)=> {
-      let timer;
-      return function () {
-        let agm = arguments;
-        window.clearTimeout(timer);
-        timer = window.setTimeout(()=> {
-          fn.apply(this, agm);
-        }, delay);
-      }
-    };
     let merge = (...sources) => {
       return Object.assign({}, ...sources);
     };
     return {
       visible,
-      debounce,
       merge
     }
   };

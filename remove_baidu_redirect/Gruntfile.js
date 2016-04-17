@@ -1,7 +1,7 @@
 module.exports = function (grunt) {
   require('time-grunt')(grunt);
   require('grunt-contrib-clean')(grunt);
-  var meta = require('./meta');
+  var meta = require('./src/meta');
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),

@@ -73,7 +73,6 @@ $http.jsonp = (url)=> {
   script.src = url + '?callback=func';
   document.body.appendChild(script);
 
-
   return deferred.promise;
 };
 

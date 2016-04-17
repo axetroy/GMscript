@@ -1,0 +1,22 @@
+{
+  "name": "gm-script",
+  "version": "1.0.0",
+  "description": "所有的GM脚本",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/axetroy/GMscript.git"
+  },
+  "author": "axetroy",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/axetroy/GMscript/issues"
+  },
+  "homepage": "https://github.com/axetroy/GMscript#readme",
+  "dependencies": {
+    "es6-promise": "^3.1.2"
+  }
+}

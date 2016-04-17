@@ -5,10 +5,10 @@
 
 'use strict';
 
+let $ = require('../../libs/jqLite');
+let $q = require('../../libs/$q');
+let $http = require('../../libs/$http');
 let config = require('./config');
-let $ = require('./../libs/jqLite');
-let $q = require('./../libs/$q');
-let $http = require('./../libs/$http');
 
 class main {
   constructor(agm = '') {
@@ -67,7 +67,7 @@ class main {
 
     $(aEle).attr('decoding', true);
 
-    $http.get(aEle.href, {timeout: 2000, anonymous: true})
+    $http.head(aEle.href, {timeout: 2000, anonymous: true})
       .then(function (response) {
         $(aEle)
           .attr('href', response.finalUrl)

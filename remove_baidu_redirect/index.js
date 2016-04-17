@@ -1,9 +1,8 @@
-/* jshint ignore:start */
 (() => {
 
   'use strict';
 
-  let $ = require('./libs/jqLite');
+  let $ = require('./../libs/jqLite');
 
   let init = require('./src/init');
 
@@ -14,7 +13,7 @@
   let scroll = require('./src/scroll');
 
   $(()=> {
-
+    
     // init
     init();
 
@@ -31,8 +30,4 @@
 
   console.info('去跳转启动...');
 
-
 })();
-
-
-/* jshint ignore:end */

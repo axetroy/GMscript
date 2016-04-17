@@ -4,22 +4,25 @@
 
 'use strict';
 
-let $ = require('../libs/jqLite');
+let $ = require('../../libs/jqLite');
+let $debounce = require('../../libs/$debounce').$debounce;
+let $addStyle = require('../../libs/$addStyle');
+
 let main = require('./main');
 let init = require('./init');
 let config = require('./config');
 
-let observe = function () {
-  return ()=> {
-    let observeDebounce = $.fn.debounce((target, addList = [], removeList = []) => {
-      if (!addList.length) return;
+let observe = ()=> {
 
-      config.isDecodingAll ? new main(config.rules).oneByOne() : init();
-    }, 100);
-    $(document).observe(function (target, addList = [], removeList = []) {
-      observeDebounce(target, addList, removeList);
-    });
-  }
+  let observeDebounce = $debounce((target, addList = [])=> {
+    if (!addList.length) return;
+    config.isDecodingAll ? new main(config.rules).oneByOne() : init();
+    config.debug && $addStyle(config.debugStyle);
+  }, 100);
+
+  $(document).observe((target, addList = [], removeList = [])=> {
+    observeDebounce(target, addList, removeList);
+  });
 };
 
-module.exports = observe();
+module.exports = observe;
