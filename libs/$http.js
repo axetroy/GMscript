@@ -6,6 +6,7 @@
 
 let $q = require('./$q');
 let $ = require('./jqLite');
+let $util = require('./$util');
 
 let $http = function (ops = {}) {
   let deferred = $q.defer();
@@ -31,7 +32,7 @@ let $http = function (ops = {}) {
     response && response.finalUrl ? deferred.resolve(response) : deferred.reject(response);
   };
 
-  ops = $.fn.merge({
+  ops = $util.merge({
     onreadystatechange,
     ontimeout,
     onerror
@@ -49,7 +50,7 @@ let $http = function (ops = {}) {
 ['HEAD', 'GET', 'POST'].forEach(function (method) {
   $http[method.toLocaleLowerCase()] = function (url, ops = {}) {
     var deferred = $q.defer();
-    ops = $.fn.merge(ops, {url, method: method});
+    ops = $util.merge(ops, {url, method: method});
     $http(ops)
       .then(function (response) {
         deferred.resolve(response);

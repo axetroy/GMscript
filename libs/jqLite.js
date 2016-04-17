@@ -1,6 +1,11 @@
 
 'use strict';
 
+// es6 Array.from
+require('../node_modules/babel-polyfill/node_modules/core-js/modules/es6.array.from');
+// es6 Object.assign
+require('../node_modules/babel-polyfill/node_modules/core-js/modules/es6.object.assign');
+
 let noop = x => x;
 
 class jqLite {
