@@ -135,8 +135,6 @@ var $http = function $http() {
     onerror: onerror
   }, ops);
 
-  console.log($util);
-
   // make the protocol agree
   if (!new RegExp('^' + window.location.protocol).test(ops.url)) {
     ops.url = ops.url.replace(/^(http|https):/im, window.location.protocol);
