@@ -17,7 +17,11 @@ var scripts = [
   },
   {
     name: 'remove_zhihu_redirect',
-    title: '移除B户的跳转链接'
+    title: '移除B乎的跳转链接'
+  },
+  {
+    name: 'remove_baidu_search_ads',
+    title: '移除百度搜索置顶推广'
   }
 ];
 

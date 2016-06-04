@@ -2,7 +2,7 @@
 // @name    Block somebody
 // @author  burningall
 // @description 在贴吧屏蔽某人,眼不见心不烦
-// @version     2016.05.11
+// @version     2016.6.4
 // @include     *tieba.baidu.com/p/*
 // @include     *tieba.baidu.com/*
 // @include     *tieba.baidu.com/f?*
@@ -20,6 +20,12 @@
 // @contributionURL troy450409405@gmail.com|alipay.com
 // @namespace https://greasyfork.org/zh-CN/users/3400-axetroy
 // ==/UserScript==
+
+/*
+
+ Github源码:https://github.com/axetroy/GMscript
+
+ */
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};

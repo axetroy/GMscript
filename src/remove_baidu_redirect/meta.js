@@ -3,7 +3,7 @@
 // @author            axetroy
 // @collaborator      axetroy
 // @description       去除百度搜索跳转链接
-// @version           2016.4.17.2
+// @version           2016.6.4
 // @grant             GM_xmlhttpRequest
 // @include           *www.baidu.com*
 // @connect           *
@@ -15,3 +15,9 @@
 // @namespace         https://greasyfork.org/zh-CN/users/3400-axetroy
 // @license           The MIT License (MIT); http://opensource.org/licenses/MIT
 // ==/UserScript==
+
+/*
+
+ Github源码:https://github.com/axetroy/GMscript
+
+ */

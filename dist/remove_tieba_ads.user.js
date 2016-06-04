@@ -2,7 +2,7 @@
 // @name              去除贴吧列表里面的广告
 // @author            axetroy
 // @description       去除贴吧掺夹在[帖子列表][回复列表]里的广告
-// @version           2016.4.9
+// @version           2016.6.4
 // @include           http://tieba.baidu.com/*
 // @connect           tags
 // @connect           *
@@ -14,6 +14,12 @@
 // @namespace         https://greasyfork.org/zh-CN/users/3400-axetroy
 // @license           The MIT License (MIT); http://opensource.org/licenses/MIT
 // ==/UserScript==
+
+/*
+
+ Github源码:https://github.com/axetroy/GMscript
+
+ */
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -62,7 +68,7 @@
 
 	'use strict';
 
-	__webpack_require__(55);
+	__webpack_require__(58);
 
 /***/ },
 /* 1 */
@@ -1094,6 +1100,36 @@
 /* 53 */,
 /* 54 */,
 /* 55 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	var $interval = function $interval(fn, delay) {
+	  var interval = function interval() {
+	    fn.call(undefined);
+	    id = setTimeout(interval, delay);
+	  };
+
+	  var id = setTimeout(interval, delay);
+
+	  return function () {
+	    window.clearTimeout(id);
+	  };
+	};
+
+	$interval.cancel = function (timerFunc) {
+	  timerFunc();
+	};
+
+	exports.default = $interval;
+
+/***/ },
+/* 56 */,
+/* 57 */,
+/* 58 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1104,11 +1140,11 @@
 
 	var _jqLite2 = _interopRequireDefault(_jqLite);
 
-	var _config = __webpack_require__(56);
+	var _config = __webpack_require__(59);
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _$interval = __webpack_require__(57);
+	var _$interval = __webpack_require__(55);
 
 	var _$interval2 = _interopRequireDefault(_$interval);
 
@@ -1181,7 +1217,7 @@
 	});
 
 /***/ },
-/* 56 */
+/* 59 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -1197,34 +1233,6 @@
 	};
 
 	exports.default = CONFIG;
-
-/***/ },
-/* 57 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	var $interval = function $interval(fn, delay) {
-	  var interval = function interval() {
-	    fn.call(undefined);
-	    id = setTimeout(interval, delay);
-	  };
-
-	  var id = setTimeout(interval, delay);
-
-	  return function () {
-	    window.clearTimeout(id);
-	  };
-	};
-
-	$interval.cancel = function (timerFunc) {
-	  timerFunc();
-	};
-
-	exports.default = $interval;
 
 /***/ }
 /******/ ]);

@@ -1,14 +1,16 @@
 // ==UserScript==
-// @name              去除知乎跳转
+// @name              去百度搜索置顶推广 (ECMA6)
 // @author            axetroy
-// @description       去除知乎重定向，不再跳转
+// @contributor       axetroy
+// @description       去除插入在百度搜索结果头部、尾部的推广链接。
 // @version           2016.6.4
-// @include           *www.zhihu.com*
-// @connect           tags
+// @grant             none
+// @include           *www.baidu.com*
+// @include           *zhidao.baidu.com/search*
 // @connect           *
+// @supportURL        http://www.burningall.com
 // @compatible        chrome  完美运行
 // @compatible        firefox  完美运行
-// @supportURL        http://www.burningall.com
 // @run-at            document-start
 // @contributionURL   troy450409405@gmail.com|alipay.com
 // @namespace         https://greasyfork.org/zh-CN/users/3400-axetroy
@@ -17,9 +19,9 @@
 
 /*
 
-Github源码:https://github.com/axetroy/GMscript
+ Github源码:https://github.com/axetroy/GMscript
 
-*/
+ */
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -72,34 +74,28 @@ Github源码:https://github.com/axetroy/GMscript
 
 	var _jqLite2 = _interopRequireDefault(_jqLite);
 
-	var _$debounce = __webpack_require__(51);
+	var _$interval = __webpack_require__(55);
 
-	var _main = __webpack_require__(60);
+	var _$interval2 = _interopRequireDefault(_$interval);
+
+	var _main = __webpack_require__(56);
 
 	var _main2 = _interopRequireDefault(_main);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	var redirect = 'link.zhihu.com/?target='; /**
-	                                           * Created by axetroy on 16-6-4.
-	                                           */
+	var loop = (0, _$interval2.default)(function () {
+	  new _main2.default().filter().turn();
+	}, 50);
 
-	var config = {
-	  rules: ('\n      a[href*="' + redirect + '"]\n    ').trim().replace(/\n/img, '').replace(/\s{1,}([^a-zA-Z])/g, '$1')
-	};
-
+	// init
 	(0, _jqLite2.default)(function () {
-	  // init
-	  new _main2.default(config.rules).redirect();
-
-	  (0, _jqLite2.default)(document).observe((0, _$debounce.$debounce)(function (target, addList, removeList) {
-	    if (!addList || !addList.length) return;
-	    new _main2.default(config.rules).redirect();
-	  }, 200));
-
-	  (0, _jqLite2.default)(window).bind('scroll', (0, _$debounce.$debounce)(function () {
-	    new _main2.default(config.rules).redirect();
-	  }, 200));
+	  new _main2.default().filter().turn();
+	  _$interval2.default.cancel(loop);
+	  (0, _jqLite2.default)(document).observe(function () {
+	    return new _main2.default().filter().turn();
+	  });
+	  console.info('去广告启动...');
 	});
 
 /***/ },
@@ -1061,7 +1057,11 @@ Github源码:https://github.com/axetroy/GMscript
 /* 48 */,
 /* 49 */,
 /* 50 */,
-/* 51 */
+/* 51 */,
+/* 52 */,
+/* 53 */,
+/* 54 */,
+/* 55 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -1069,74 +1069,27 @@ Github源码:https://github.com/axetroy/GMscript
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	/*
-	 * 频率控制 返回函数连续调用时，fn 执行频率限定为每多少时间执行一次
-	 * @param fn {function}  需要调用的函数
-	 * @param delay  {number}    延迟时间，单位毫秒
-	 * @param immediate  {bool} 给 immediate参数传递false 绑定的函数先执行，而不是delay后后执行。
-	 * @return {function}实际调用函数
-	 */
-	var $throttle = function $throttle(fn, delay, immediate, debounce) {
-	  var curr = +new Date(),
-	      //当前事件
-	  last_call = 0,
-	      last_exec = 0,
-	      timer = null,
-	      diff,
-	      //时间差
-	  context,
-	      //上下文
-	  args,
-	      exec = function exec() {
-	    last_exec = curr;
-	    fn.apply(context, args);
+	var $interval = function $interval(fn, delay) {
+	  var interval = function interval() {
+	    fn.call(undefined);
+	    id = setTimeout(interval, delay);
 	  };
+
+	  var id = setTimeout(interval, delay);
+
 	  return function () {
-	    curr = +new Date();
-	    context = this, args = arguments, diff = curr - (debounce ? last_call : last_exec) - delay;
-	    clearTimeout(timer);
-	    if (debounce) {
-	      if (immediate) {
-	        timer = setTimeout(exec, delay);
-	      } else if (diff >= 0) {
-	        exec();
-	      }
-	    } else {
-	      if (diff >= 0) {
-	        exec();
-	      } else if (immediate) {
-	        timer = setTimeout(exec, -diff);
-	      }
-	    }
-	    last_call = curr;
+	    window.clearTimeout(id);
 	  };
 	};
 
-	/*
-	 * 空闲控制 返回函数连续调用时，空闲时间必须大于或等于 delay，fn 才会执行
-	 * @param fn {function}  要调用的函数
-	 * @param delay   {number}    空闲时间
-	 * @param immediate  {bool} 给 immediate参数传递false 绑定的函数先执行，而不是delay后后执行。
-	 * @return {function}实际调用函数
-	 */
-
-	var $debounce = function $debounce(fn, delay, immediate) {
-	  return $throttle(fn, delay, immediate, true);
+	$interval.cancel = function (timerFunc) {
+	  timerFunc();
 	};
 
-	exports.$debounce = $debounce;
-	exports.$throttle = $throttle;
+	exports.default = $interval;
 
 /***/ },
-/* 52 */,
-/* 53 */,
-/* 54 */,
-/* 55 */,
-/* 56 */,
-/* 57 */,
-/* 58 */,
-/* 59 */,
-/* 60 */
+/* 56 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1151,32 +1104,39 @@ Github源码:https://github.com/axetroy/GMscript
 
 	var _jqLite2 = _interopRequireDefault(_jqLite);
 
+	var _config = __webpack_require__(57);
+
+	var _config2 = _interopRequireDefault(_config);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var Main = function () {
 	  function Main() {
-	    var _this = this;
-
-	    var agm = arguments.length <= 0 || arguments[0] === undefined ? '' : arguments[0];
+	    var rules = arguments.length <= 0 || arguments[0] === undefined ? _config2.default.rules : arguments[0];
 
 	    _classCallCheck(this, Main);
 
-	    if (!agm) return this;
-	    this.inViewPort = [];
-
-	    (0, _jqLite2.default)(agm).each(function (aEle) {
-	      if (jqLite.visible(aEle)) _this.inViewPort.push(aEle);
-	    });
+	    this.ads = (0, _jqLite2.default)(rules);
+	    this.length = this.ads.length;
 	  }
 
 	  _createClass(Main, [{
-	    key: 'redirect',
-	    value: function redirect() {
-	      (0, _jqLite2.default)(this.inViewPort).each(function (aEle) {
-	        if (!aEle || !aEle.href) return;
-	        aEle.href = aEle.href.trim().replace(/^.*link\.zhihu\.com\/\?target=(.*?)$/im, '$1').trim().replace(/^\s*http[^\/]*\/\//, 'http://');
+	    key: 'filter',
+	    value: function filter() {
+	      this.ads.each(function (ele, i) {
+	        ele.style.cssText = '\n          display:none !important;\n          visibility:hidden !important;\n          width:0 !important;\n          height:0 !important;\n          overflow:hidden !important;\n          // background-color:red !important;\n          // border:1px solid red;\n        ';
+	        ele.setAttribute('filtered', '');
+	      });
+	      return this;
+	    }
+	  }, {
+	    key: 'turn',
+	    value: function turn() {
+	      (0, _jqLite2.default)('#content_left input[type=checkbox]:not(filtered)').each(function (ele) {
+	        ele.checked = false;
+	        ele.setAttribute('filtered', '');
 	      });
 	      return this;
 	    }
@@ -1186,6 +1146,21 @@ Github源码:https://github.com/axetroy/GMscript
 	}();
 
 	exports.default = Main;
+
+/***/ },
+/* 57 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	var CONFIG = {
+	  rules: '\n    #content_left>div\n    :not([class*=result])\n    :not([class*=container])\n    :not(.leftBlock)\n    :not(#rs_top_new)\n    :not([filtered])\n    ,\n    #content_left>table\n    :not(.result)\n    :not([filtered])\n    ,\n    #content_right>table td\n    div#ec_im_container\n    ,\n    div.s-news-list-wrapper>div\n    :not([data-relatewords*="1"])\n    ,\n    div.list-wraper dl[data-oad]\n    :not([data-fb])\n    :not([filtered])\n  '.trim().replace(/\n/img, '').replace(/\s{1,}([^a-zA-Z])/g, '$1')
+	};
+
+	exports.default = CONFIG;
 
 /***/ }
 /******/ ]);

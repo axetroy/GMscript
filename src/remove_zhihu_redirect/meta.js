@@ -2,7 +2,7 @@
 // @name              去除知乎跳转
 // @author            axetroy
 // @description       去除知乎重定向，不再跳转
-// @version           2016.4.9
+// @version           2016.6.4
 // @include           *www.zhihu.com*
 // @connect           tags
 // @connect           *
@@ -14,3 +14,9 @@
 // @namespace         https://greasyfork.org/zh-CN/users/3400-axetroy
 // @license           The MIT License (MIT); http://opensource.org/licenses/MIT
 // ==/UserScript==
+
+/*
+
+Github源码:https://github.com/axetroy/GMscript
+
+*/

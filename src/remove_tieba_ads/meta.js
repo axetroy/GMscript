@@ -2,7 +2,7 @@
 // @name              去除贴吧列表里面的广告
 // @author            axetroy
 // @description       去除贴吧掺夹在[帖子列表][回复列表]里的广告
-// @version           2016.4.9
+// @version           2016.6.4
 // @include           http://tieba.baidu.com/*
 // @connect           tags
 // @connect           *
@@ -14,3 +14,9 @@
 // @namespace         https://greasyfork.org/zh-CN/users/3400-axetroy
 // @license           The MIT License (MIT); http://opensource.org/licenses/MIT
 // ==/UserScript==
+
+/*
+
+ Github源码:https://github.com/axetroy/GMscript
+
+ */
