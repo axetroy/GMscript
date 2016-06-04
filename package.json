@@ -1,23 +1,33 @@
 {
   "name": "gm-script",
   "version": "1.0.0",
-  "description": "所有的GM脚本",
+  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/axetroy/GMscript.git"
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "babel": "^6.5.2",
+    "babel-core": "^6.9.1",
+    "babel-loader": "^6.2.4",
+    "babel-preset-es2015": "^6.9.0",
+    "css-loader": "^0.23.1",
+    "file-loader": "^0.8.5",
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.0",
+    "gulp-load-plugins": "^1.2.4",
+    "gulp-webpack": "^1.5.0",
+    "html-loader": "^0.4.3",
+    "node-sass": "^3.7.0",
+    "sass-loader": "^3.2.0",
+    "style-loader": "^0.13.1",
+    "svgo": "^0.6.6",
+    "svgo-loader": "^1.1.0"
   },
-  "author": "axetroy",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/axetroy/GMscript/issues"
-  },
-  "homepage": "https://github.com/axetroy/GMscript#readme",
   "dependencies": {
     "babel-polyfill": "^6.7.4",
-    "es6-promise": "^3.1.2"
+    "q": "^1.4.1"
   }
 }

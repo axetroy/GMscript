@@ -1,7 +1,3 @@
-/**
- * Created by axetroy on 16-4-17.
- */
-
 let addCssByStyle = (cssString) => {
   let doc = document;
   let style = doc.createElement("style");
@@ -24,4 +20,4 @@ let $addStyle = (styleCSSText) => {
   !style && addCssByStyle(styleCSSText);
 };
 
-module.exports = $addStyle;
+export default $addStyle;

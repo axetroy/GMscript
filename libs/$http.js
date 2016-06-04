@@ -4,7 +4,7 @@
  * @returns {Promise}
  */
 
-let $q = require('./$q');
+let $q = require('q');
 let $ = require('./jqLite');
 let $util = require('./$util');
 
@@ -77,4 +77,4 @@ $http.jsonp = (url)=> {
   return deferred.promise;
 };
 
-module.exports = $http;
+export default $http;

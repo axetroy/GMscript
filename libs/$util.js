@@ -3,7 +3,7 @@
  */
 
 // object.assign for merge and copy
-require('../node_modules/babel-polyfill/node_modules/core-js/modules/es6.object.assign');
+import 'babel-polyfill/node_modules/babel-runtime/node_modules/core-js/modules/es6.object.assign';
 
 const TYPED_ARRAY_REGEXP = /^\[object (?:Uint8|Uint8Clamped|Uint16|Uint32|Int8|Int16|Int32|Float32|Float64)Array\]$/;
 

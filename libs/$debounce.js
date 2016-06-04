@@ -52,4 +52,4 @@ var $debounce = function (fn, delay, immediate) {
   return $throttle(fn, delay, immediate, true);
 };
 
-module.exports = {$debounce, $throttle};
+export {$debounce, $throttle};

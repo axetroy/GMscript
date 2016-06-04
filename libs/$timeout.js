@@ -18,4 +18,4 @@ $timeout.cancel = function (timerId) {
   return timerId;
 };
 
-module.exports = $timeout;
+export default $timeout;
