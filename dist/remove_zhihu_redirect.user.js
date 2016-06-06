@@ -2,8 +2,9 @@
 // @name              去除知乎跳转
 // @author            axetroy
 // @description       去除知乎重定向，不再跳转
-// @version           2016.6.6
+// @version           2016.6.6.1
 // @include           *www.zhihu.com*
+// @include           *zhuanlan.zhihu.com*
 // @connect           tags
 // @connect           *
 // @compatible        chrome  完美运行
@@ -1176,7 +1177,9 @@ Github源码:https://github.com/axetroy/GMscript
 	    value: function redirect() {
 	      (0, _jqLite2.default)(this.inViewPort).each(function (aEle) {
 	        if (!aEle || !aEle.href) return;
-	        aEle.href = aEle.href.trim().replace(/^.*link\.zhihu\.com\/\?target=(.*?)$/im, '$1').trim().replace(/^\s*http[^\/]*\/\//, 'http://');
+	        var href = aEle.href.trim().replace(/^.*link\.zhihu\.com\/\?target=(.*?)$/im, '$1').trim().replace(/^\s*http[^\/]*\/\//, 'http://');
+	        href = decodeURIComponent(href);
+	        aEle.href = href;
 	      });
 	      return this;
 	    }

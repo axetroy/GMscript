@@ -13,8 +13,10 @@ class Main {
   redirect() {
     $(this.inViewPort).each(function (aEle) {
       if (!aEle || !aEle.href) return;
-      aEle.href = aEle.href.trim().replace(/^.*link\.zhihu\.com\/\?target=(.*?)$/im, '$1')
+      let href = aEle.href.trim().replace(/^.*link\.zhihu\.com\/\?target=(.*?)$/im, '$1')
         .trim().replace(/^\s*http[^\/]*\/\//, 'http://');
+      href = decodeURIComponent(href);
+      aEle.href = href;
     });
     return this;
   }

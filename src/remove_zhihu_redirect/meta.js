@@ -2,8 +2,9 @@
 // @name              去除知乎跳转
 // @author            axetroy
 // @description       去除知乎重定向，不再跳转
-// @version           2016.6.6
+// @version           2016.6.6.1
 // @include           *www.zhihu.com*
+// @include           *zhuanlan.zhihu.com*
 // @connect           tags
 // @connect           *
 // @compatible        chrome  完美运行
