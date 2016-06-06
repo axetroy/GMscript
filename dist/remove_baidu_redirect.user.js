@@ -3408,7 +3408,7 @@
 
 	        (0, _jqLite2.default)('.t>a:not(.OP_LOG_LINK):not([decoded])').each(function (sourceEle) {
 	          (0, _jqLite2.default)('.f>a', html).each(function (targetEle) {
-	            if ((0, _jqLite2.default)(sourceEle).text === (0, _jqLite2.default)(targetEle).text) {
+	            if ((0, _jqLite2.default)(sourceEle).text().trim() === (0, _jqLite2.default)(targetEle).text().trim()) {
 	              sourceEle.href = targetEle.href;
 	              (0, _jqLite2.default)(sourceEle).attr('decoded', true);
 	            }

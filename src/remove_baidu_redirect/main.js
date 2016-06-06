@@ -38,7 +38,7 @@ class main {
 
         $('.t>a:not(.OP_LOG_LINK):not([decoded])').each(sourceEle=> {
           $('.f>a', html).each((targetEle) => {
-            if ($(sourceEle).text === $(targetEle).text) {
+            if ($(sourceEle).text().trim() === $(targetEle).text().trim()) {
               sourceEle.href = targetEle.href;
               $(sourceEle).attr('decoded', true);
             }
