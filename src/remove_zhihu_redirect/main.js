@@ -6,7 +6,7 @@ class Main {
     this.inViewPort = [];
 
     $(agm).each((aEle) => {
-      if (jqLite.visible(aEle)) this.inViewPort.push(aEle);
+      if ($.fn.visible(aEle)) this.inViewPort.push(aEle);
     });
   }
 

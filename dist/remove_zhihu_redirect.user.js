@@ -1167,7 +1167,7 @@ Github源码:https://github.com/axetroy/GMscript
 	    this.inViewPort = [];
 
 	    (0, _jqLite2.default)(agm).each(function (aEle) {
-	      if (jqLite.visible(aEle)) _this.inViewPort.push(aEle);
+	      if (_jqLite2.default.fn.visible(aEle)) _this.inViewPort.push(aEle);
 	    });
 	  }
 
