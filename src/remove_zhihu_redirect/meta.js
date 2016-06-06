@@ -2,7 +2,7 @@
 // @name              去除知乎跳转
 // @author            axetroy
 // @description       去除知乎重定向，不再跳转
-// @version           2016.6.4
+// @version           2016.6.6
 // @include           *www.zhihu.com*
 // @connect           tags
 // @connect           *
