@@ -2,7 +2,8 @@
 
 #### 当前脚本,点击直接安装
 
-- [去除百度搜索跳转链接](https://github.com/axetroy/GMscript/raw/master/dist/remove_baidu_redirect.user.js)
+- [去除百度搜索跳转链接es6](https://github.com/axetroy/GMscript/raw/master/dist/remove_baidu_redirect.user.js)(不推荐继续使用)
+- [去除百度搜索跳转链接typescript](https://github.com/axetroy/bd-fuck)
 - [去除百度搜索的置顶推广](https://github.com/axetroy/GMscript/raw/master/dist/remove_baidu_search_ads.user.js)
 - [去除百度贴吧的广告](https://github.com/axetroy/GMscript/raw/master/dist/remove_tieba_ads.user.js)
 - [去除知乎的跳转链接](https://github.com/axetroy/GMscript/raw/master/dist/remove_zhihu_redirect.user.js)
