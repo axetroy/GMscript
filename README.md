@@ -1,5 +1,7 @@
 ### 我的油猴脚本集合
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/axetroy/GMscript.svg)](https://greenkeeper.io/)
+
 #### 当前脚本,点击直接安装
 
 - [去除百度搜索跳转链接es6](https://github.com/axetroy/GMscript/raw/master/dist/remove_baidu_redirect.user.js)(不推荐继续使用)
