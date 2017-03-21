@@ -22,7 +22,7 @@
     "html-loader": "^0.4.3",
     "node-sass": "^4.5.0",
     "sass-loader": "^6.0.3",
-    "style-loader": "^0.14.1",
+    "style-loader": "^0.15.0",
     "svgo": "^0.7.2",
     "svgo-loader": "^1.1.0"
   },
