@@ -13,7 +13,7 @@
     "babel-core": "^6.9.1",
     "babel-loader": "^6.2.4",
     "babel-preset-es2015": "^6.9.0",
-    "css-loader": "^0.28.0",
+    "css-loader": "^0.28.2",
     "file-loader": "^0.11.0",
     "gulp": "^3.9.1",
     "gulp-concat": "^2.6.0",
